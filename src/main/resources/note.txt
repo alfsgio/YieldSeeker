@@ -1,0 +1,71 @@
+Appartement : 
+Ville : String,
+Taille : number,
+DPE : String (A,B,C,D), 
+Chauffage : String (individuel, collectif),
+Parking : {
+	having : bool,
+	type : String (normal, ss, box)
+},
+extraSpace : {
+	having : bool,
+	type : String (balcon, terrasse, jardin),
+	taille : number,
+},
+commodités : {
+	ascenceur : bool
+}
+
+Location :
+Prix : {
+	total : number,
+	charges : number,
+	énergie : number
+}
+
+Achat :
+Prix : {
+	prixVente : number,
+	notaire : number,
+	charges : number,
+	énergie : number
+}
+Loué : bool,
+procédureEnCours : bool,
+taxeFoncière : number,
+crédit : number,
+gestion : number
+
+
+TAXE FONCIèRE :
+Modificateurs :
+[
+	{eau courante : 4},
+	{gaz : 2},
+	{electricité : 2},
+	{baignoire : 5}
+	{douche : 4},
+	{lavabo : 3},
+	{WC : 3},
+	{egout : 3},
+	{vide-ordure : 3},
+	{chauffage central/piece : 2}
+]
+
+surface pondérée = surface réelle + modificateurs
+valeur locative cadastrale = ( surface pondérée * tarif au m² )*12
+revenu cadastral = valeur locative cadastrale/2
+taxe foncière = revenu cadastral * taux fixés par les collectivités locales
+mensualisé = taxe foncière /12
+
+CRéDIT :
+
+[capital × (taux/12)]/[1 – (1 + (taux/12) – (12 × nombre d’années de remboursement))]
+
+tauxPériodique = (1+ (taux annuel/100))^(1/12) - 1
+tauxP = (taux annuel/100) / 12
+
+mensualité = [ montant emprunté * tauxP * (1+tauxP)^année de prêt*12 ] / [ (1+tauxP)^année de prêt*12 - 1 ]
+
+GESTION :
+entre 6 & 10 % du loyer annuel
