@@ -69,3 +69,9 @@ mensualité = [ montant emprunté * tauxP * (1+tauxP)^année de prêt*12 ] / [ (
 
 GESTION :
 entre 6 & 10 % du loyer annuel
+
+https://www.seloger.com/list.htm?projects=2&types=2,1&places=[{%22inseeCodes%22:[910161]}]&surface=30/NaN&rooms=1&epc=A,B,C,D&qsVersion=1.0
+
+projects = 1:louer / 2:achat
+types = 1:appart / 2:maison
+nature = dans le vieux

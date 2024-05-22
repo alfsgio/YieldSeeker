@@ -11,6 +11,6 @@ public class YieldController {
 
     @RequestMapping("/scrap")
     public String getScrap(){
-        return yieldService.scrapIt();
+        return yieldService.startScrapper();
     }
 }
