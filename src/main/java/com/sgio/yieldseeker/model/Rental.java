@@ -1,12 +1,13 @@
 package com.sgio.yieldseeker.model;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 @Getter
 @Setter
-@Builder
+@SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Rental extends Apartment {
     private float priceTotal;
     private float priceCharges;
