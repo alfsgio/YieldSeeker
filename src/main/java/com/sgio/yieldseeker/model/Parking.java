@@ -1,6 +1,6 @@
 package com.sgio.yieldseeker.model;
 
-import com.sgio.yieldseeker.constant.ParkingType;
+import com.sgio.yieldseeker.enumerations.ParkingType;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;

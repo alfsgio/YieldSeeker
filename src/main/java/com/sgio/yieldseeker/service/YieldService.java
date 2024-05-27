@@ -1,19 +1,17 @@
 package com.sgio.yieldseeker.service;
 
-import org.jsoup.Connection;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.*;
-import org.jsoup.select.*;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -46,18 +44,29 @@ public class YieldService {
     }
 
     private String scrapIt() {
+        String content = "";
+        System.setProperty("webdriver.chrome.driver", "C:/Users/Sgio/Workspace/Tools/chromedriver.exe");
+        WebDriver driver = new ChromeDriver();
+
         try {
-            Document document = Jsoup.connect("https://www.bienici.com/recherche/achat/chilly-mazarin-91380/appartement/studio?surface-min=25&classification-energetique=A%2CB%2CC%2CD&page=NaN").get();
-            Elements elements = document.getElementsByClass(".detailedSheetLink");
+            driver.get("https://www.bienici.com/recherche/achat/chilly-mazarin-91380/appartement/studio?surface-min=25&classification-energetique=A%2CB%2CC%2CD");
 
-            for(Element e : elements){
-                System.out.println(e.attr("href"));
-            }
+            WebDriverWait waiter = new WebDriverWait(driver, Duration.ofSeconds(10));
+            WebElement element = waiter.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("div.resultsListContainer"))); // Attente jusqu'a ce que l'élément soit visible
+            content = element.getText();
 
-        } catch (IOException e) {
-            System.out.println(e);
+//            // Attendre que toutes les balises <div class="resultsListContainer"> soient visibles et les récupérer
+//            List<WebElement> elements = wait.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(By.cssSelector("div.resultsListContainer")));
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            // Fermez le navigateur
+            driver.quit();
         }
-        return "";
+
+        return content;
     }
 
     private Map<String, Object> getParameters(){

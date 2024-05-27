@@ -1,4 +1,4 @@
-package com.sgio.yieldseeker.constant;
+package com.sgio.yieldseeker.enumerations;
 
 public enum Convenience {
     ascenceur

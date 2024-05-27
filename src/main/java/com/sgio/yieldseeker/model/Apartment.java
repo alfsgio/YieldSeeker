@@ -1,8 +1,8 @@
 package com.sgio.yieldseeker.model;
 
-import com.sgio.yieldseeker.constant.Convenience;
-import com.sgio.yieldseeker.constant.DPE;
-import com.sgio.yieldseeker.constant.Heating;
+import com.sgio.yieldseeker.enumerations.Convenience;
+import com.sgio.yieldseeker.enumerations.DPE;
+import com.sgio.yieldseeker.enumerations.Heating;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 

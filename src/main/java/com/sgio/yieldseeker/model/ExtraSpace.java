@@ -1,6 +1,6 @@
 package com.sgio.yieldseeker.model;
 
-import com.sgio.yieldseeker.constant.SpaceType;
+import com.sgio.yieldseeker.enumerations.SpaceType;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
