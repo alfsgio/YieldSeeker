@@ -9,12 +9,14 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Purchase extends Apartment {
-    private float priceNotary;
-    private float priceCharges;
-    private float priceEnergy;
+    private Float price;
+    private Float priceNotary;
+    private Float priceCharges;
+    private Float priceEnergy;
+    private Float priceFees;
     private boolean rented;
     private boolean procedureInProgress;
-    private float propertyTax;
-    private float credit;
-    private float management;
+    private Float propertyTax;
+    private Float credit;
+    private Float management;
 }

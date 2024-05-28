@@ -9,7 +9,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Rental extends Apartment {
-    private float priceTotal;
-    private float priceCharges;
-    private float priceEnergy;
+    private Float priceTotal;
+    private Float priceCharges;
+    private Float priceEnergy;
 }
