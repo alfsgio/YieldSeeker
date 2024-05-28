@@ -79,8 +79,8 @@ public class YieldService {
     }
 
     private Number formatToNumber(String string, boolean isFloat){
-        String stringFormated = string.replaceAll("\\D", ""); // Regex : Tout ce qui n'est pas un numéro
-        String numberFormated = string.replaceAll(",", ".");
+        String stringFormated = string.replaceAll("[^\\d,]",  ""); // Regex : Tout ce qui n'est pas un numéro ou ","
+        String numberFormated = stringFormated.replaceAll(",", ".");
 
         if(!numberFormated.isBlank()) {
             if (isFloat) {
