@@ -1,6 +1,7 @@
 package com.sgio.yieldseeker.service;
 
 import com.sgio.yieldseeker.model.Purchase;
+import org.apache.commons.lang3.StringUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -28,7 +29,7 @@ public class YieldService {
         Matcher matcher;
 
         try {
-            WebDriverWait waiter = new WebDriverWait(driver, Duration.ofSeconds(3));
+            WebDriverWait waiter = new WebDriverWait(driver, Duration.ofSeconds(5));
 
             driver.get("https://www.bienici.com/recherche/achat/chilly-mazarin-91380/appartement/studio?surface-min=25&classification-energetique=A%2CB%2CC%2CD");
             List<WebElement> elements = waiter.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(By.cssSelector("div.resultsListContainer a.detailedSheetLink")));
@@ -38,12 +39,9 @@ public class YieldService {
 
             for(String href : hrefList){
                 // Example :
-                // https://www.bienici.com/annonce/vente/chilly-mazarin/appartement/1piece/iad-france-1500946?q=%2Frecherche%2Fachat%2Fchilly-mazarin-91380%2Fappartement%2Fstudio%3Fsurface-min%3D25%26classification-energetique%3DA%252CB%252CC%252CD
-                // https://www.bienici.com/annonce/vente/chilly-mazarin/appartement/1piece/ag911713-376183630?q=%2Frecherche%2Fachat%2Fchilly-mazarin-91380%2Fappartement%2Fstudio%3Fsurface-min%3D25%26classification-energetique%3DA%252CB%252CC%252CD
-                // https://www.bienici.com/annonce/vente/chilly-mazarin/appartement/1piece/immo-facile-54656262?q=%2Frecherche%2Fachat%2Fchilly-mazarin-91380%2Fappartement%2Fstudio%3Fsurface-min%3D25%26classification-energetique%3DA%252CB%252CC%252CD
-                System.out.println(href);
-                driver.get(href);
                 Purchase purchase = new Purchase();
+                purchase.setLink(href);
+                driver.get(purchase.getLink());
 
                 // Size
                 WebElement size = waiter.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("div.titleInside h1")));
@@ -53,13 +51,13 @@ public class YieldService {
 
                 // City
                 WebElement city = waiter.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("div.titleInside span.fullAddress")));
-                matcher = Pattern.compile("\\d{5}").matcher(size.getText()); // Regex : 5 numéros
+                matcher = Pattern.compile("\\d{5}").matcher(city.getText()); // Regex : 5 numéros
                 Integer formatedCity = (Integer) formatToNumber(matcher.find() ? matcher.group() : "", false);
                 purchase.setCity(formatedCity);
 
                 // Price
                 WebElement price = waiter.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("div.titleInside span.ad-price__the-price")));
-                Float formatedPrice = (Float) formatToNumber(matcher.find() ? matcher.group() : "", true);
+                Float formatedPrice = (Float) formatToNumber(price.getText(), true);
                 purchase.setPrice(formatedPrice);
 
                 // Price fees
@@ -72,6 +70,7 @@ public class YieldService {
             }
         } catch (Exception e) {
             e.printStackTrace();
+            return purchases;
         } finally {
             driver.quit(); // Ferme le navigateur
         }
@@ -81,12 +80,13 @@ public class YieldService {
 
     private Number formatToNumber(String string, boolean isFloat){
         String stringFormated = string.replaceAll("\\D", ""); // Regex : Tout ce qui n'est pas un numéro
+        String numberFormated = string.replaceAll(",", ".");
 
-        if(!stringFormated.isBlank()) {
+        if(!numberFormated.isBlank()) {
             if (isFloat) {
-                return Float.parseFloat(stringFormated);
+                return Float.parseFloat(numberFormated);
             } else {
-                return Integer.parseInt(stringFormated);
+                return Integer.parseInt(numberFormated);
             }
         } else {
             return formatToNumber("0", isFloat);

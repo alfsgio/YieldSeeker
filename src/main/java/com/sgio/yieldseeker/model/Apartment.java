@@ -21,4 +21,5 @@ public class Apartment {
     private Parking parking;
     private ExtraSpace extraSpace;
     private List<Convenience> convenience;
+    private String link;
 }
