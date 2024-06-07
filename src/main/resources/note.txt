@@ -75,3 +75,9 @@ https://www.seloger.com/list.htm?projects=2&types=2,1&places=[{%22inseeCodes%22:
 projects = 1:louer / 2:achat
 types = 1:appart / 2:maison
 nature = dans le vieux
+
+https://www.bienici.com/annonce/vente/chilly-mazarin/appartement/3pieces/nestenn-1-99938818694?q=%2Frecherche%2Fachat%2Fchilly-mazarin-91380%2Fappartement%2F3-pieces-et-moins%3Fsurface-min%3D25%26classification-energetique%3DA%252CB%252CC%252CD
+Exemple 'Chauffage Collectif', 'Procédure en cours' et 'Intervalle priceEnergy'
+
+https://www.bienici.com/annonce/vente/grigny/appartement/2pieces/iad-france-1525687?q=%2Frecherche%2Fachat%2Fgrigny-91350%2Fappartement%2Fstudio%3Fsurface-min%3D25%26classification-energetique%3DA%252CB%252CC%252CD
+Exemple 'Procédure en cours'

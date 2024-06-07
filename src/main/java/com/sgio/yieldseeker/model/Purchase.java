@@ -14,8 +14,8 @@ public class Purchase extends Apartment {
     private Float priceCharges;
     private Float priceEnergy;
     private Float priceFees;
-    private boolean rented;
-    private boolean procedureInProgress;
+    private Boolean rented;
+    private Boolean procedureInProgress;
     private Float propertyTax;
     private Float credit;
     private Float management;
