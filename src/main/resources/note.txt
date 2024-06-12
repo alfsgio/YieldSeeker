@@ -81,3 +81,12 @@ Exemple 'Chauffage Collectif', 'Procédure en cours' et 'Intervalle priceEnergy'
 
 https://www.bienici.com/annonce/vente/grigny/appartement/2pieces/iad-france-1525687?q=%2Frecherche%2Fachat%2Fgrigny-91350%2Fappartement%2Fstudio%3Fsurface-min%3D25%26classification-energetique%3DA%252CB%252CC%252CD
 Exemple 'Procédure en cours'
+
+
+// Stream = transform the list into stream
+// Filter = return a stream with only the matching elements
+// Pattern = regex with one of the two keyword, only check if exists
+// FindFirst = get the first element
+// OrElse = if value, returns it, otherwise, return the specified value
+// ToList = transform the result to list
+// AnyMatch = check in the stream if there is a match with predicate

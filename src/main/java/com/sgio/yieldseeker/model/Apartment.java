@@ -6,15 +6,17 @@ import com.sgio.yieldseeker.enumerations.ExtraSpace;
 import com.sgio.yieldseeker.enumerations.Heating;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
 @Setter
 @SuperBuilder
-@NoArgsConstructor
 @AllArgsConstructor
 public class Apartment {
+    private String link;
     private Integer city;
     private Integer size;
     private DPE dpe;
@@ -22,7 +24,11 @@ public class Apartment {
     private Boolean parking;
     private List<ExtraSpace> extraSpaces;
     private List<Convenience> convenience;
-    private String link;
+
+    public Apartment() {
+        this.extraSpaces = new ArrayList<>();
+        this.convenience = new ArrayList<>();
+    }
 
     public void addConvenience(Convenience convenience) {
         this.convenience.add(convenience);

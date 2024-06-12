@@ -1,10 +1,10 @@
 package com.sgio.yieldseeker.service;
 
+import com.sgio.yieldseeker.enumerations.Convenience;
 import com.sgio.yieldseeker.enumerations.DPE;
 import com.sgio.yieldseeker.enumerations.ExtraSpace;
 import com.sgio.yieldseeker.enumerations.Heating;
 import com.sgio.yieldseeker.model.Purchase;
-import org.apache.commons.lang3.StringUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
@@ -17,10 +17,10 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 
 @Service
@@ -29,120 +29,174 @@ public class YieldService {
     public List<Purchase> startScrapper() {
         // Initialize a web driver in headless mode
         System.setProperty("webdriver.chrome.driver", "src/main/resources/chromedriver.exe");
-        ChromeOptions options = new ChromeOptions();
-        options.addArguments("--headless=new");
-        WebDriver driver = new ChromeDriver();
+        ChromeOptions chromeOptions = new ChromeOptions();
+        chromeOptions.addArguments("--headless=new");
+        final WebDriver driver = new ChromeDriver(chromeOptions);
 
-        List<Purchase> purchases = new ArrayList<Purchase>();
+        final List<Purchase> purchases = new ArrayList<Purchase>();
         Matcher matcher;
 
-        System.out.println("--------------- START SCRAPPING ---------------");
+        System.out.println("--------------> START SCRAPPING <--------------");
 
         try {
-            WebDriverWait waiter = new WebDriverWait(driver, Duration.ofSeconds(10));
+            final WebDriverWait waiter = new WebDriverWait(driver, Duration.ofSeconds(120));
 
-            driver.get("https://www.bienici.com/recherche/achat/chilly-mazarin-91380/appartement/studio?surface-min=25&classification-energetique=A%2CB%2CC%2CD");
-            List<WebElement> elements = waiter.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(By.cssSelector("div.resultsListContainer a.detailedSheetLink")));
+//            driver.get("https://www.bienici.com/recherche/achat/ris-orangis-91130,chilly-mazarin-91380,grigny-91350/appartement/studio?surface-min=20&classification-energetique=A%2CB%2CC%2CD");
+            driver.get("https://www.bienici.com/recherche/achat/essonne-91/appartement/studio?surface-min=20&classification-energetique=A%2CB%2CC%2CD");
+            final List<WebElement> elements = waiter.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(By.cssSelector("div.resultsListContainer a.detailedSheetLink")));
 
-            // Stream = Transform the list into stream
-            // Map = Map between property and property.method
-            // Collect = Collect results to make a list
-            List<String> hrefList = elements.stream()
+            // Get href of each a.detailedSheetLink
+            final List<String> hrefList = elements.stream()
                     .map(element -> element.getAttribute("href"))
-                    .collect(Collectors.toList());
+                    .toList();
 
             for(String href : hrefList){
-                Purchase purchase = new Purchase();
+                final Purchase purchase = new Purchase();
                 purchase.setLink(href);
                 driver.get(purchase.getLink());
 
-                // --- APARTMENT
+                System.out.println("**************| " + (purchases.size()+1) + " Purchase |**************");
 
-                // - Size
-                WebElement size = waiter.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("div.titleInside h1")));
+                System.out.println("--------------> APPARTEMENT PART <--------------");
+
+                System.out.println("--------------| Get Size |--------------");
+
+                final WebElement size = waiter.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("div.titleInside h1")));
                 matcher = Pattern.compile("\\d+\\s*m²").matcher(size.getText()); // Regex : number(s) followed by "m²"
-                Integer formatedSize = (Integer) formatToNumber(matcher.find() ? matcher.group() : "", false);
+                final Integer formatedSize = (Integer) formatToNumber(matcher.find() ? matcher.group() : "", false);
                 purchase.setSize(formatedSize);
 
-                // - City
-                WebElement city = waiter.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("div.titleInside span.fullAddress")));
+                System.out.println("--------------| Get City |--------------");
+
+                final WebElement city = waiter.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("div.titleInside span.fullAddress")));
                 matcher = Pattern.compile("\\d{5}").matcher(city.getText()); // Regex : 5 numbers
-                Integer formatedCity = (Integer) formatToNumber(matcher.find() ? matcher.group() : "", false);
+                final Integer formatedCity = (Integer) formatToNumber(matcher.find() ? matcher.group() : "", false);
                 purchase.setCity(formatedCity);
 
-                // - DPE
-                WebElement dpeValue = waiter.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("div.dpe-line__classification span div")));
-                try { // If the value we retrieve doesn't match witch enumeration
-                    DPE dpe = DPE.valueOf(dpeValue.getText());
+                System.out.println("--------------| Get DPE |--------------");
+
+                try {
+                    final WebElement dpeValue = waiter.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("div.dpe-line__classification span div")));
+                    final DPE dpe = DPE.valueOf(dpeValue.getText());
                     purchase.setDpe(dpe);
-                } catch (IllegalArgumentException e) {
-                    System.out.println("Error detected : " + e);
+                } catch (IllegalArgumentException e) { // If the DPE.valueOf(dpeValue.getText()) fails
+                    System.out.println("--------------} This purchasecontain not complient DPE value");
+                } catch(TimeoutException e) { // If "div.dpe-line__classification span div" not found
+                    try {
+                        System.out.println("Trying the second DPE tag");
+                        final WebElement dpeValue = waiter.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("div.energy-diagnostic-rating span.energy-diagnostic-rating__classification")));
+                        final DPE dpe = DPE.valueOf(dpeValue.getText());
+                        purchase.setDpe(dpe);
+                    } catch (IllegalArgumentException e2) { // If the DPE.valueOf(dpeValue.getText()) fails
+                        System.out.println("--------------} This purchasecontain not complient DPE value");
+                    } catch(TimeoutException e2) { // If "div.energy-diagnostic-rating span.energy-diagnostic-rating__classification" not found
+                        System.out.println("--------------} This purchase doesn't contain DPE value");
+                    }
                 }
 
-                // - Heating
-                final String detailHeating = findDetailWithKeyword(waiter, "chauffage");
+                // - Load all spans and their texts
+                final List<WebElement> spanElements = waiter.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(By.cssSelector("div.allDetails div.labelInfo span")));
+                final List<String> spanTexts = spanElements.stream()
+                        .map(element -> element.getText().toLowerCase()) // Get text of each span in lowCase
+                        .map(text -> text.startsWith("1 ") ? text.substring(2) : text) // Substring the "1 " if the text contains it
+                        .toList();
+                // ----------------
 
-                List<String> keywords = List.of("collectif", "individuel");
-                // Stream = transform the list into stream
-                // Filter = return a stream with only the matching elements
-                // Pattern = regex with one of the two keyword, only check if exists
-                // FindFirst = get the first element
-                // OrElse = if value, returns it, otherwise, return the specified value
-                String heatingValue = keywords.stream()
+                System.out.println("--------------| Get Heating |--------------");
+
+                // Transform to string's list the enum
+                final List<String> heatingKeywords = Arrays.stream(Heating.values())
+                        .map(Enum::name)
+                        .toList();
+
+                // Filter to get the detail containing the keyword
+                final String detailHeating = spanTexts.stream()
+                        .filter(spanText -> spanText.contains("chauffage"))
+                        .findFirst()
+                        .orElse("");
+
+                // Find the first heating in the heating keywords that match the detailHeating string
+                final String heatingValue = heatingKeywords.stream()
                         .filter(keyword -> Pattern.compile("\\b" + Pattern.quote(keyword) + "\\b").matcher(detailHeating).find())
                         .findFirst()
                         .orElse("");
 
-                try { // If the value we retrieve doesn't match with enumeration
-                    Heating heating = Heating.valueOf(heatingValue);
-                    purchase.setHeating(heating);
-                } catch (IllegalArgumentException e) {
-                    System.out.println("Error detected : " + e);
+                try {
+                    purchase.setHeating(Heating.valueOf(heatingValue));
+                } catch (IllegalArgumentException e){
+                    System.out.println("--------------} This purchase doesn't contain heating value");
                 }
 
-                // - Parking
-                final String detailParking = findDetailWithKeyword(waiter, "parking");
+                System.out.println("--------------| Get Parking |--------------");
+
+                // Filter to get the detail containing the keyword
+                final String detailParking = spanTexts.stream()
+                        .filter(spanText -> spanText.contains("parking"))
+                        .findFirst()
+                        .orElse("");
+
                 purchase.setParking(!detailParking.isBlank());
 
-                // - ExtraSpace
-                for(ExtraSpace es : ExtraSpace.values()){
-                    final String detailExtraSpace = findDetailWithKeyword(waiter, es.toString());
+                System.out.println("--------------| Get ExtraSpace |--------------");
 
-                    try { // If the value we retrieve doesn't match with enumeration
-                        final ExtraSpace extraSpace = ExtraSpace.valueOf(detailExtraSpace);
-                        purchase.addExtraSpaces(extraSpace);
-                    } catch (IllegalArgumentException e) {
-                        System.out.println("Error detected : " + e);
-                    }
-                }
+                Arrays.stream(ExtraSpace.values())
+                                .filter(extraSpace -> spanTexts.contains(extraSpace.name()))
+                                        .toList()
+                                                .forEach(extraSpace -> purchase.addExtraSpaces(extraSpace));
 
-                // --- PURCHASE
+                System.out.println("--------------| Get Convenience |--------------");
 
-                // - Price
-                WebElement price = waiter.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("div.titleInside span.ad-price__the-price")));
-                Float formatedPrice = (Float) formatToNumber(price.getText(), true);
+                Arrays.stream(Convenience.values())
+                        .filter(convenience -> spanTexts.contains(convenience.name()))
+                                .toList()
+                                        .forEach(convenience -> purchase.addConvenience(convenience));
+
+                System.out.println("--------------> PURCHASE PART <--------------");
+
+                System.out.println("--------------| Get Price |--------------");
+
+                final WebElement price = waiter.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("div.titleInside span.ad-price__the-price")));
+                final Float formatedPrice = (Float) formatToNumber(price.getText(), true);
                 purchase.setPrice(formatedPrice);
 
-                // - Price fees
-                WebElement priceFees = waiter.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("div.titleInside div.ad-price__fees-infos")));
+                System.out.println("--------------| Get Price Fees |--------------");
+
+                final WebElement priceFees = waiter.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("div.titleInside div.ad-price__fees-infos")));
                 matcher = Pattern.compile("\\d+(?:[.,]\\d+)?% TTC").matcher(priceFees.getText()); // Regex : Number(s) followed by "." or "," followed by "% TTC"
-                Float formatedPriceFees = (Float) formatToNumber(matcher.find() ? matcher.group() : "", true);
+                final Float formatedPriceFees = (Float) formatToNumber(matcher.find() ? matcher.group() : "", true);
                 purchase.setPriceFees(formatedPriceFees);
 
-                // - Price charges
+                System.out.println("--------------| Get Price Charges |--------------");
+                // A REVOIR
                 try { // If there is no div / If there is one, it can have no amount
-                    WebElement priceCharges = waiter.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("div.isInCondominiumBlock")));
+                    final WebElement priceCharges = waiter.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("div.isInCondominiumBlock")));
                     matcher = Pattern.compile("\\b\\d{1,3}(?:\\s?\\d{3})*(?:,\\d{2})?\\s*€").matcher(priceCharges.getText()); // Regex : Number(s) with or without space followed by "€"
-                    Float formatedPriceCharges = (Float) formatToNumber(matcher.find() ? matcher.group() : "", true);
+                    final Float formatedPriceCharges = (Float) formatToNumber(matcher.find() ? matcher.group() : "", true);
                     purchase.setPriceCharges(formatedPriceCharges);
                 } catch (TimeoutException e) {
-                    System.out.println("Error detected : " + e);
+                    System.out.println("--------------} This purchase doesn't contain price charges value");
                 }
 
-                // ---
+            // Get the all text
+                final WebElement allText = waiter.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("div.see-more-description span.see-more-description__content")));
+            // ----------------
+
+                System.out.println("--------------| Get Rented |--------------");
+
+                purchase.setRented(allText.getText().toLowerCase().contains("vendu loué"));
+
+                System.out.println("--------------| Get Procedure in progress |--------------");
+
+                try { // If there is no div / If there is one, it can have no amount
+                    final WebElement procedureInProgress = waiter.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("div.isInCondominiumBlock")));
+                    purchase.setProcedureInProgress(procedureInProgress.getText().contains("Une procédure est en cours."));
+                } catch (TimeoutException e) {
+                    System.out.println("--------------} This purchase doesn't contain procedure in progress value");
+                }
+
+            // --- --------
 
                 purchases.add(purchase);
-
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -151,14 +205,14 @@ public class YieldService {
             driver.quit(); // Close web browser
         }
 
-        System.out.println("--------------- END SCRAPPING ---------------");
+        System.out.println("--------------> END SCRAPPING <--------------");
 
         return purchases;
     }
 
     private Number formatToNumber(String string, boolean isFloat){
-        String stringFormated = string.replaceAll("[^\\d,]",  ""); // Regex : Everything that's not a number or ","
-        String numberFormated = stringFormated.replaceAll(",", ".");
+        final String stringFormated = string.replaceAll("[^\\d,]",  ""); // Regex : Everything that's not a number or ","
+        final String numberFormated = stringFormated.replaceAll(",", ".");
 
         if(!numberFormated.isBlank()) {
             if (isFloat) {
@@ -169,29 +223,5 @@ public class YieldService {
         } else {
             return null;
         }
-    }
-
-    private String findDetailWithKeyword(WebDriverWait waiter, String keyword){
-        List<WebElement> elements = waiter.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(By.cssSelector("div.allDetails div.labelInfo span")));
-
-        // Stream = transform the list into stream
-        // Map = map between property and property.method
-        // Collect = collect results to make a list
-        List<String> listDetails = elements.stream()
-                .map(element -> element.getText().toLowerCase())
-                .collect(Collectors.toList());
-
-        // Stream = transform the list into stream
-        // Filter = return a stream with only the matching elements
-        // FindFirst = get the first element
-        // OrElse = if value, returns it, otherwise, return the specified value
-        return listDetails.stream()
-                .filter(detail -> detail.contains(keyword))
-                .findFirst()
-                .orElse("");
-    }
-
-    private String findInTextWithKeyword(WebDriverWait waiter, List<String> keywords){
-        return "";
     }
 }
