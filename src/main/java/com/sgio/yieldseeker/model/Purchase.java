@@ -5,14 +5,15 @@ import lombok.experimental.SuperBuilder;
 
 @Getter
 @Setter
-@SuperBuilder
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Purchase extends Apartment {
+public class Purchase {
+    private String purchaseAdLink;
+    private Apartment apartment;
     private Float price;
     private Float priceFees;
     private Float priceCharges;
-    private Float priceEnergy;
     private Float priceNotary;
     private Boolean rented;
     private Boolean procedureInProgress;

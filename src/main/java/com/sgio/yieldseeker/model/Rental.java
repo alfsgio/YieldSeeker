@@ -5,10 +5,12 @@ import lombok.experimental.SuperBuilder;
 
 @Getter
 @Setter
-@SuperBuilder
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Rental extends Apartment {
+public class Rental {
+    private String rentalAdLink;
+    private Apartment apartment;
     private Float priceTotal;
     private Float priceCharges;
     private Float priceEnergy;

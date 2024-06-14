@@ -13,10 +13,9 @@ import java.util.List;
 
 @Getter
 @Setter
-@SuperBuilder
+@Builder
 @AllArgsConstructor
 public class Apartment {
-    private String link;
     private Integer city;
     private Integer size;
     private DPE dpe;

@@ -20,8 +20,8 @@ public class YieldController {
     CalculatorService calculatorService;
 
     @RequestMapping("/scrap")
-    public List<Purchase> getScrap(){
-        return yieldService.startScrapper();
+    public List<Purchase> getYield(){
+        return yieldService.yield();
     }
 
     @RequestMapping("/monthly/{amount}")
