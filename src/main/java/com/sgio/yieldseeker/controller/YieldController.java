@@ -24,6 +24,12 @@ public class YieldController {
         return yieldService.yield();
     }
 
+    @RequestMapping("/scrapUrl")
+    public String getYieldUrl(){
+        return yieldService.yieldUrl();
+    }
+
+
     @RequestMapping("/monthly/{amount}")
     public Double getMonthly(@PathVariable Integer amount){
         return calculatorService.calculateMonthly(amount);

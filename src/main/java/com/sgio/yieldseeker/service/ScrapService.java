@@ -7,6 +7,7 @@ import com.sgio.yieldseeker.enumerations.Heating;
 import com.sgio.yieldseeker.model.Apartment;
 import com.sgio.yieldseeker.model.Purchase;
 import com.sgio.yieldseeker.model.Rental;
+import io.github.bonigarcia.wdm.WebDriverManager;
 import org.openqa.selenium.By;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
@@ -15,7 +16,6 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -32,6 +32,32 @@ public class ScrapService {
 
     private String urlPart1 = "https://www.bienici.com/recherche/";
     private String urlPart2 = "/chilly-mazarin-91380,morangis-91420,massy-91300,longjumeau-91160/appartement/studio?surface-min=20&classification-energetique=A%2CB%2CC%2CD&mode=galerie";
+
+    public String testScrapUrl() {
+        // Initialiser le WebDriver
+        WebDriverManager.chromedriver().setup();
+        ChromeOptions chromeOptions = new ChromeOptions();
+        chromeOptions.addArguments("--headless=new");
+        chromeOptions.addArguments("--disable-gpu");
+        WebDriver driver = new ChromeDriver(chromeOptions);
+
+        try {
+            // Ouvrir l'URL souhaitée
+//            driver.get("https://www.bienici.com/realEstateAds.json?filters=%7B%22size%22%3A24%2C%22from%22%3A0%2C%22showAllModels%22%3Afalse%2C%22filterType%22%3A%22buy%22%2C%22propertyType%22%3A%5B%22flat%22%5D%2C%22maxRooms%22%3A1%2C%22minArea%22%3A25%2C%22energyClassification%22%3A%5B%22A%22%2C%22B%22%2C%22C%22%2C%22D%22%5D%2C%22page%22%3A1%2C%22sortBy%22%3A%22relevance%22%2C%22sortOrder%22%3A%22desc%22%2C%22onTheMarket%22%3A%5Btrue%5D%2C%22zoneIdsByTypes%22%3A%7B%22zoneIds%22%3A%5B%22-29369%22%5D%7D%7D&extensionType=extendedIfNoResult&leadingCount=2&access_token=8F%2BOcxGsKbj3pWJHCYhugO9G%2FtEYCOGq4UjWDJ3EjHM%3D%3A666c1f988a9e1d00b7d75e50&id=666c1f988a9e1d00b7d75e50");
+            driver.get("https://www.bienici.com/realEstateAds.json?filters=%7B%22size%22%3A24%2C%22from%22%3A0%2C%22showAllModels%22%3Afalse%2C%22filterType%22%3A%22buy%22%2C%22propertyType%22%3A%5B%22flat%22%5D%2C%22maxRooms%22%3A1%2C%22minArea%22%3A25%2C%22energyClassification%22%3A%5B%22A%22%2C%22B%22%2C%22C%22%2C%22D%22%5D%2C%22page%22%3A1%2C%22sortBy%22%3A%22relevance%22%2C%22sortOrder%22%3A%22desc%22%2C%22onTheMarket%22%3A%5Btrue%5D%2C%22zoneIdsByTypes%22%3A%7B%22zoneIds%22%3A%5B%22-7401%22%5D%7D%7D&extensionType=extendedIfNoResult&leadingCount=2&access_token=8F%2BOcxGsKbj3pWJHCYhugO9G%2FtEYCOGq4UjWDJ3EjHM%3D%3A666c1f988a9e1d00b7d75e50&id=666c1f988a9e1d00b7d75e50");
+            // Attendre quelques secondes pour que la page charge (optionnel)
+            Thread.sleep(5000);
+
+            // Récupérer le contenu de la page
+            return driver.getPageSource();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "";
+        } finally {
+            // Fermer le navigateur
+            driver.quit();
+        }
+    }
 
     private Apartment scrapApartment() {
         final Apartment apartment = new Apartment();
@@ -203,7 +229,8 @@ public class ScrapService {
         final List<Purchase> purchases = new ArrayList<Purchase>();
         Matcher matcher;
 
-        System.setProperty("webdriver.chrome.driver", "src/main/resources/chromedriver.exe");
+//        System.setProperty("webdriver.chrome.driver", "src/main/resources/chromedriver.exe");
+        WebDriverManager.chromedriver().setup();
         ChromeOptions chromeOptions = new ChromeOptions();
         chromeOptions.addArguments("--headless=new");
         WebDriver webDriver = new ChromeDriver(chromeOptions);
@@ -257,3 +284,4 @@ public class ScrapService {
         }
     }
 }
+
