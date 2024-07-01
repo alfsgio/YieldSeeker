@@ -1,5 +1,7 @@
 package com.sgio.yieldseeker.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sgio.yieldseeker.enumerations.Convenience;
 import com.sgio.yieldseeker.enumerations.DPE;
 import com.sgio.yieldseeker.enumerations.ExtraSpace;
@@ -16,13 +18,16 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -41,8 +46,12 @@ public class ScrapService {
 
     private final String filters = "{\"filterType\":\"buy\",\"propertyType\":[\"flat\"],\"maxRooms\":1,\"minArea\":25,\"energyClassification\":[\"A\",\"B\",\"C\",\"D\"],\"onTheMarket\":[true],\"zoneIdsByTypes\":{\"zoneIds\":[\"-29369\"]}}";
 
+    @Bean
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
+    }
+
     public String testScrapUrl() {
-        // Initialiser le WebDriver
         WebDriverManager.chromedriver().setup();
         ChromeOptions chromeOptions = new ChromeOptions();
         chromeOptions.addArguments("--headless=new");
@@ -50,31 +59,46 @@ public class ScrapService {
         WebDriver driver = new ChromeDriver(chromeOptions);
 
         try {
-            // Ouvrir l'URL souhaitée
-//            driver.get("https://www.bienici.com/realEstateAds.json?filters=%7B%22size%22%3A24%2C%22from%22%3A0%2C%22showAllModels%22%3Afalse%2C%22filterType%22%3A%22buy%22%2C%22propertyType%22%3A%5B%22flat%22%5D%2C%22maxRooms%22%3A1%2C%22minArea%22%3A25%2C%22energyClassification%22%3A%5B%22A%22%2C%22B%22%2C%22C%22%2C%22D%22%5D%2C%22page%22%3A1%2C%22sortBy%22%3A%22relevance%22%2C%22sortOrder%22%3A%22desc%22%2C%22onTheMarket%22%3A%5Btrue%5D%2C%22zoneIdsByTypes%22%3A%7B%22zoneIds%22%3A%5B%22-29369%22%5D%7D%7D&extensionType=extendedIfNoResult&leadingCount=2&access_token=8F%2BOcxGsKbj3pWJHCYhugO9G%2FtEYCOGq4UjWDJ3EjHM%3D%3A666c1f988a9e1d00b7d75e50&id=666c1f988a9e1d00b7d75e50");
             final String encodedUrl = "https://www.bienici.com/realEstateAds.json?filters=" + URLEncoder.encode(filters, StandardCharsets.UTF_8) + "&extensionType=extendedIfNoResult";
-            driver.get(encodedUrl);
-            // Attendre quelques secondes pour que la page charge (optionnel)
-            Thread.sleep(5000);
 
-            // Récupérer le contenu de la page
+            String response = restTemplate().getForObject(encodedUrl, String.class);
+
+            driver.get(encodedUrl);
+            Thread.sleep(5000); // Attendre quelques secondes pour que la page charge (optionnel)
+            final String datasJson = driver.getPageSource();
+
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode parsedJson = mapper.readTree(datasJson);
+            JsonNode realEstateAdsNode = parsedJson.path("realEstateAds");
+
+            Iterator<JsonNode> elements = realEstateAdsNode.elements();
+            while (elements.hasNext()) {
+                JsonNode node = elements.next();
+                System.out.println(node.path("city").asInt());
+//                scrapApartment(node);
+            }
+
+            System.out.println(parsedJson.get("name").asText());
+
             return driver.getPageSource();
 
         } catch (Exception e) {
             e.printStackTrace();
             return "";
         } finally {
-            // Fermer le navigateur
-            driver.quit();
+            driver.quit(); // Close web browser
         }
     }
 
-    private Apartment scrapApartment() {
+    private Apartment scrapApartment(JsonNode node) {
         final Apartment apartment = new Apartment();
         Matcher matcher;
 
         System.out.println("-----> APPARTEMENT PART");
         System.out.println("-----| Get Size");
+
+        apartment.setSize(node.path("city").asInt());
+
 
         final WebElement size = waiter.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("div.titleInside h1")));
         matcher = Pattern.compile("\\d+\\s*m²").matcher(size.getText()); // Regex : number(s) followed by "m²"
@@ -261,10 +285,11 @@ public class ScrapService {
             for(String href : hrefList) {
                 webDriver.get(href);
                 System.out.println("****| " + (purchases.size() + 1) + " Purchase");
-                final Apartment apartment = scrapApartment();
+//                final Apartment apartment = scrapApartment();
                 final Purchase purchase = scrapPurchase();
                 purchase.setPurchaseAdLink(href);
-                purchase.setApartment(apartment);
+//                purchase.setApartment(apartment);
+
 
                 purchases.add(purchase);
             }
