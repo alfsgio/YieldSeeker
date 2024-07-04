@@ -16,7 +16,7 @@ public class YieldService {
         return scrapService.scrapPurchases();
     }
 
-    public String yieldUrl(){
+    public List<Purchase> yieldUrl(){
         return scrapService.testScrapUrl();
     }
 }

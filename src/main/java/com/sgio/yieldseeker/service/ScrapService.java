@@ -2,6 +2,10 @@ package com.sgio.yieldseeker.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.sgio.yieldseeker.enumerations.Convenience;
 import com.sgio.yieldseeker.enumerations.DPE;
 import com.sgio.yieldseeker.enumerations.ExtraSpace;
@@ -44,155 +48,216 @@ public class ScrapService {
     private final String zoneCode77 = "-7383";
     private final String zoneCode78 = "-7457";
 
-    private final String filters = "{\"filterType\":\"buy\",\"propertyType\":[\"flat\"],\"maxRooms\":1,\"minArea\":25,\"energyClassification\":[\"A\",\"B\",\"C\",\"D\"],\"onTheMarket\":[true],\"zoneIdsByTypes\":{\"zoneIds\":[\"-29369\"]}}";
+    private final String filters = "{\"filterType\":\"buy\",\"propertyType\":[\"flat\"],\"maxRooms\":1,\"minArea\":25,\"energyClassification\":[\"A\",\"B\",\"C\",\"D\"],\"onTheMarket\":[true],\"zoneIdsByTypes\":{\"zoneIds\":[\"-7401\"]}}";
 
     @Bean
     public RestTemplate restTemplate() {
         return new RestTemplate();
     }
 
-    public String testScrapUrl() {
+    public List<Purchase> testScrapUrl() {
         WebDriverManager.chromedriver().setup();
-        ChromeOptions chromeOptions = new ChromeOptions();
-        chromeOptions.addArguments("--headless=new");
-        chromeOptions.addArguments("--disable-gpu");
-        WebDriver driver = new ChromeDriver(chromeOptions);
+        final ChromeOptions chromeOptions = new ChromeOptions().addArguments("--headless=new", "--disable-gpu");
+        final WebDriver driver = new ChromeDriver(chromeOptions);
+
+        final String encodedUrl = "https://www.bienici.com/realEstateAds.json?filters=" + URLEncoder.encode(filters, StandardCharsets.UTF_8) + "&extensionType=extendedIfNoResult";
+        String jsonText = "";
 
         try {
-            final String encodedUrl = "https://www.bienici.com/realEstateAds.json?filters=" + URLEncoder.encode(filters, StandardCharsets.UTF_8) + "&extensionType=extendedIfNoResult";
-
-            String response = restTemplate().getForObject(encodedUrl, String.class);
-
             driver.get(encodedUrl);
-            Thread.sleep(5000); // Attendre quelques secondes pour que la page charge (optionnel)
-            final String datasJson = driver.getPageSource();
-
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode parsedJson = mapper.readTree(datasJson);
-            JsonNode realEstateAdsNode = parsedJson.path("realEstateAds");
-
-            Iterator<JsonNode> elements = realEstateAdsNode.elements();
-            while (elements.hasNext()) {
-                JsonNode node = elements.next();
-                System.out.println(node.path("city").asInt());
-//                scrapApartment(node);
-            }
-
-            System.out.println(parsedJson.get("name").asText());
-
-            return driver.getPageSource();
-
+            final WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+            final WebElement jsonWebElement = wait.until(ExpectedConditions.presenceOfElementLocated(By.tagName("pre")));
+            jsonText = jsonWebElement.getText();
         } catch (Exception e) {
             e.printStackTrace();
-            return "";
         } finally {
             driver.quit(); // Close web browser
         }
-    }
 
-    private Apartment scrapApartment(JsonNode node) {
-        final Apartment apartment = new Apartment();
-        Matcher matcher;
+        JsonArray jsonPurchases = null;
+        if(!jsonText.isBlank()){
+            jsonPurchases = JsonParser.parseString(jsonText)
+                    .getAsJsonObject()
+                    .get("realEstateAds").getAsJsonArray();
+        }
 
-        System.out.println("-----> APPARTEMENT PART");
-        System.out.println("-----| Get Size");
+        List<Purchase> purchases = new ArrayList<>();
 
-        apartment.setSize(node.path("city").asInt());
+        if(jsonPurchases != null){
+            for(JsonElement jsonPurchase : jsonPurchases){
 
+                // - Non nullable
+                String city = jsonPurchase.getAsJsonObject().get("city").getAsString();
+                Integer postalCode = jsonPurchase.getAsJsonObject().get("postalCode").getAsInt();
+                Float size = jsonPurchase.getAsJsonObject().get("surfaceArea").getAsFloat();
+                DPE dpe = DPE.valueOf(jsonPurchase.getAsJsonObject().get("energyClassification").getAsString());
 
-        final WebElement size = waiter.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("div.titleInside h1")));
-        matcher = Pattern.compile("\\d+\\s*m²").matcher(size.getText()); // Regex : number(s) followed by "m²"
-        final Integer formatedSize = (Integer) formatToNumber(matcher.find() ? matcher.group() : "", false);
-        apartment.setSize(formatedSize);
+                // Exemple à suivre :
+                // String heatingString = jsonObject.has("heating") ? jsonObject.get("heating").getAsString() : null;
 
-        System.out.println("-----| Get City");
+                // - Heating
+                String heatingString = null;
+                if(jsonPurchase.getAsJsonObject().get("heating") != null){
+                    heatingString = jsonPurchase.getAsJsonObject().get("heating").getAsString();
+                }
 
-        final WebElement city = waiter.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("div.titleInside span.fullAddress")));
-        matcher = Pattern.compile("\\d{5}").matcher(city.getText()); // Regex : 5 numbers
-        final Integer formatedCity = (Integer) formatToNumber(matcher.find() ? matcher.group() : "", false);
-        apartment.setCity(formatedCity);
+                Heating heating = null;
+                if(heatingString != null){
+                    heating = heatingString.contains("collectif") ? Heating.valueOf("collectif") : Heating.valueOf("individuel");
+                }
 
-        System.out.println("-----| Get DPE");
+                // - Parking
+                Boolean parking = null;
+                if(jsonPurchase.getAsJsonObject().get("parkingPlacesQuantity") != null){
+                    parking = jsonPurchase.getAsJsonObject().get("parkingPlacesQuantity").getAsInt() > 0;
+                }
 
-        try {
-            final WebElement dpeValue = waiter.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("div.dpe-line__classification span div")));
-            final DPE dpe = DPE.valueOf(dpeValue.getText());
-            apartment.setDpe(dpe);
-        } catch (IllegalArgumentException e) { // If the DPE.valueOf(dpeValue.getText()) fails
-            System.out.println("-----} This purchase doesn't contain compliant DPE value");
-        } catch (TimeoutException e) { // If "div.dpe-line__classification span div" not found
-            try {
-                System.out.println("Trying the second DPE tag");
-                final WebElement dpeValue = waiter.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("div.energy-diagnostic-rating span.energy-diagnostic-rating__classification")));
-                final DPE dpe = DPE.valueOf(dpeValue.getText());
-                apartment.setDpe(dpe);
-            } catch (IllegalArgumentException e2) { // If the DPE.valueOf(dpeValue.getText()) fails
-                System.out.println("-----} This purchase doesn't contain compliant DPE value");
-            } catch (
-                    TimeoutException e2) { // If "div.energy-diagnostic-rating span.energy-diagnostic-rating__classification" not found
-                System.out.println("-----} This purchase doesn't contain DPE value");
+                // - ExtraSpaces
+                List<ExtraSpace> extraSpaces = new ArrayList<>();
+                if(jsonPurchase.getAsJsonObject().get("balconyQuantity") != null
+                        && jsonPurchase.getAsJsonObject().get("parkingPlacesQuantity").getAsInt() > 0){
+                    extraSpaces.add(ExtraSpace.valueOf("balcon"));
+                }
+                if(jsonPurchase.getAsJsonObject().get("hasTerrace") != null
+                        && jsonPurchase.getAsJsonObject().get("hasTerrace").getAsBoolean()){
+                    extraSpaces.add(ExtraSpace.valueOf("terrasse"));
+                }
+                if(jsonPurchase.getAsJsonObject().get("hasCellar") != null
+                        && jsonPurchase.getAsJsonObject().get("hasCellar").getAsBoolean()){
+                    extraSpaces.add(ExtraSpace.valueOf("cave"));
+                }
+
+                // - Conveniences
+                List<Convenience> convenience = new ArrayList<>();
+                if(jsonPurchase.getAsJsonObject().get("hasElevator") != null
+                        && jsonPurchase.getAsJsonObject().get("hasElevator").getAsBoolean()){
+                    convenience.add(Convenience.valueOf("ascenceur"));
+                }
+                if(jsonPurchase.getAsJsonObject().get("hasIntercom") != null
+                        && jsonPurchase.getAsJsonObject().get("hasIntercom").getAsBoolean()){
+                    convenience.add(Convenience.valueOf("interphone"));
+                }
+                if(jsonPurchase.getAsJsonObject().get("hasDoorCode") != null
+                        && jsonPurchase.getAsJsonObject().get("hasDoorCode").getAsBoolean()){
+                    convenience.add(Convenience.valueOf("digicode"));
+                }
+
+                // - Build Apartement
+                Apartment apartment = Apartment.builder().city(city).postalCode(postalCode).size(size).dpe(dpe).heating(heating).parking(parking).extraSpaces(extraSpaces).convenience(convenience).build();
+
+                Purchase purchase = new Purchase();
+                purchase.setApartment(apartment);
+
+                purchases.add(purchase);
             }
         }
 
-        // - Load all spans and their texts
-        final List<WebElement> spanElements = waiter.until(ExpectedConditions.presenceOfAllElementsLocatedBy(By.cssSelector("div.labelInfo span")));
-        final List<String> spanTexts = spanElements.stream()
-                .map(element -> element.getText().toLowerCase()) // Get text of each span in lowCase
-                .map(text -> text.startsWith("1 ") ? text.substring(2) : text) // Substring the "1 " if the text contains it
-                .toList();
-        // ----------------
-
-        System.out.println("-----| Get Heating");
-
-        // Transform to string's list the enum
-        final List<String> heatingKeywords = Arrays.stream(Heating.values())
-                .map(Enum::name)
-                .toList();
-
-        // Filter to get the detail containing the keyword
-        final String detailHeating = spanTexts.stream()
-                .filter(spanText -> spanText.contains("chauffage"))
-                .findFirst()
-                .orElse("");
-
-        // Find the first heating in the heating keywords that match the detailHeating string
-        final String heatingValue = heatingKeywords.stream()
-                .filter(keyword -> Pattern.compile("\\b" + Pattern.quote(keyword) + "\\b").matcher(detailHeating).find())
-                .findFirst()
-                .orElse("");
-
-        try {
-            apartment.setHeating(Heating.valueOf(heatingValue));
-        } catch (IllegalArgumentException e) {
-            System.out.println("-----} This purchase doesn't contain heating value");
-        }
-
-        System.out.println("-----| Get Parking");
-
-        // Filter to get the detail containing the keyword
-        final String detailParking = spanTexts.stream()
-                .filter(spanText -> spanText.contains("parking"))
-                .findFirst()
-                .orElse("");
-
-        apartment.setParking(!detailParking.isBlank());
-
-        System.out.println("-----| Get ExtraSpace");
-
-        Arrays.stream(ExtraSpace.values())
-                .filter(extraSpace -> spanTexts.contains(extraSpace.name()))
-                .toList()
-                .forEach(extraSpace -> apartment.addExtraSpaces(extraSpace));
-
-        System.out.println("-----| Get Convenience");
-
-        Arrays.stream(Convenience.values())
-                .filter(convenience -> spanTexts.contains(convenience.name()))
-                .toList()
-                .forEach(convenience -> apartment.addConvenience(convenience));
-
-        return apartment;
+        return purchases;
     }
+
+//    private Apartment scrapApartment(JsonNode node) {
+//        final Apartment apartment = new Apartment();
+//        Matcher matcher;
+//
+//        System.out.println("-----> APPARTEMENT PART");
+//        System.out.println("-----| Get Size");
+//
+//        apartment.setSize(node.path("city").asInt());
+//
+//
+//        final WebElement size = waiter.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("div.titleInside h1")));
+//        matcher = Pattern.compile("\\d+\\s*m²").matcher(size.getText()); // Regex : number(s) followed by "m²"
+//        final Integer formatedSize = (Integer) formatToNumber(matcher.find() ? matcher.group() : "", false);
+//        apartment.setSize(formatedSize);
+//
+//        System.out.println("-----| Get City");
+//
+//        final WebElement city = waiter.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("div.titleInside span.fullAddress")));
+//        matcher = Pattern.compile("\\d{5}").matcher(city.getText()); // Regex : 5 numbers
+//        final Integer formatedCity = (Integer) formatToNumber(matcher.find() ? matcher.group() : "", false);
+//        apartment.setCity(formatedCity);
+//
+//        System.out.println("-----| Get DPE");
+//
+//        try {
+//            final WebElement dpeValue = waiter.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("div.dpe-line__classification span div")));
+//            final DPE dpe = DPE.valueOf(dpeValue.getText());
+//            apartment.setDpe(dpe);
+//        } catch (IllegalArgumentException e) { // If the DPE.valueOf(dpeValue.getText()) fails
+//            System.out.println("-----} This purchase doesn't contain compliant DPE value");
+//        } catch (TimeoutException e) { // If "div.dpe-line__classification span div" not found
+//            try {
+//                System.out.println("Trying the second DPE tag");
+//                final WebElement dpeValue = waiter.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("div.energy-diagnostic-rating span.energy-diagnostic-rating__classification")));
+//                final DPE dpe = DPE.valueOf(dpeValue.getText());
+//                apartment.setDpe(dpe);
+//            } catch (IllegalArgumentException e2) { // If the DPE.valueOf(dpeValue.getText()) fails
+//                System.out.println("-----} This purchase doesn't contain compliant DPE value");
+//            } catch (
+//                    TimeoutException e2) { // If "div.energy-diagnostic-rating span.energy-diagnostic-rating__classification" not found
+//                System.out.println("-----} This purchase doesn't contain DPE value");
+//            }
+//        }
+//
+//        // - Load all spans and their texts
+//        final List<WebElement> spanElements = waiter.until(ExpectedConditions.presenceOfAllElementsLocatedBy(By.cssSelector("div.labelInfo span")));
+//        final List<String> spanTexts = spanElements.stream()
+//                .map(element -> element.getText().toLowerCase()) // Get text of each span in lowCase
+//                .map(text -> text.startsWith("1 ") ? text.substring(2) : text) // Substring the "1 " if the text contains it
+//                .toList();
+//        // ----------------
+//
+//        System.out.println("-----| Get Heating");
+//
+//        // Transform to string's list the enum
+//        final List<String> heatingKeywords = Arrays.stream(Heating.values())
+//                .map(Enum::name)
+//                .toList();
+//
+//        // Filter to get the detail containing the keyword
+//        final String detailHeating = spanTexts.stream()
+//                .filter(spanText -> spanText.contains("chauffage"))
+//                .findFirst()
+//                .orElse("");
+//
+//        // Find the first heating in the heating keywords that match the detailHeating string
+//        final String heatingValue = heatingKeywords.stream()
+//                .filter(keyword -> Pattern.compile("\\b" + Pattern.quote(keyword) + "\\b").matcher(detailHeating).find())
+//                .findFirst()
+//                .orElse("");
+//
+//        try {
+//            apartment.setHeating(Heating.valueOf(heatingValue));
+//        } catch (IllegalArgumentException e) {
+//            System.out.println("-----} This purchase doesn't contain heating value");
+//        }
+//
+//        System.out.println("-----| Get Parking");
+//
+//        // Filter to get the detail containing the keyword
+//        final String detailParking = spanTexts.stream()
+//                .filter(spanText -> spanText.contains("parking"))
+//                .findFirst()
+//                .orElse("");
+//
+//        apartment.setParking(!detailParking.isBlank());
+//
+//        System.out.println("-----| Get ExtraSpace");
+//
+//        Arrays.stream(ExtraSpace.values())
+//                .filter(extraSpace -> spanTexts.contains(extraSpace.name()))
+//                .toList()
+//                .forEach(extraSpace -> apartment.addExtraSpaces(extraSpace));
+//
+//        System.out.println("-----| Get Convenience");
+//
+//        Arrays.stream(Convenience.values())
+//                .filter(convenience -> spanTexts.contains(convenience.name()))
+//                .toList()
+//                .forEach(convenience -> apartment.addConvenience(convenience));
+//
+//        return apartment;
+//    }
 
     private Purchase scrapPurchase() {
         final Purchase purchase = new Purchase();

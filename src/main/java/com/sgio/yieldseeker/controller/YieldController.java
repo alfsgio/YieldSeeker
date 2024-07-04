@@ -25,7 +25,7 @@ public class YieldController {
     }
 
     @RequestMapping("/scrapUrl")
-    public String getYieldUrl(){
+    public List<Purchase> getYieldUrl(){
         return yieldService.yieldUrl();
     }
 

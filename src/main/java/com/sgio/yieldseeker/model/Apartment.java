@@ -16,8 +16,9 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 public class Apartment {
-    private Integer city;
-    private Integer size;
+    private String city;
+    private Integer postalCode;
+    private Float size;
     private DPE dpe;
     private Heating heating;
     private Boolean parking;
