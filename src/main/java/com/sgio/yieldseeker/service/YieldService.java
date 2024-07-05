@@ -12,10 +12,6 @@ public class YieldService {
     @Autowired
     ScrapService scrapService;
 
-    public List<Purchase> yield(){
-        return scrapService.scrapPurchases();
-    }
-
     public List<Purchase> yieldUrl(){
         return scrapService.testScrapUrl();
     }

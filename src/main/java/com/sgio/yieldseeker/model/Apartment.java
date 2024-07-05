@@ -18,7 +18,7 @@ import java.util.List;
 public class Apartment {
     private String city;
     private Integer postalCode;
-    private Float size;
+    private Float surfaceArea;
     private DPE dpe;
     private Heating heating;
     private Boolean parking;
