@@ -1,18 +1,17 @@
 package com.sgio.yieldseeker.service;
 
-import com.sgio.yieldseeker.model.Purchase;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.util.Map;
 
 @Service
 public class YieldService {
 
     @Autowired
-    ScrapService scrapService;
+    CollectorService collectorService;
 
-    public List<Purchase> yieldUrl(){
-        return scrapService.testScrapUrl();
+    public Map<String, Map> yieldUrl(){
+        return collectorService.collectAll();
     }
 }

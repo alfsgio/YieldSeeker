@@ -84,6 +84,31 @@ Exemple 'Procédure en cours'
 
 https://www.bienici.com/realEstateAds.json?filters=%7B%22size%22%3A24%2C%22from%22%3A0%2C%22showAllModels%22%3Afalse%2C%22filterType%22%3A%22buy%22%2C%22propertyType%22%3A%5B%22flat%22%5D%2C%22maxRooms%22%3A1%2C%22minArea%22%3A25%2C%22energyClassification%22%3A%5B%22A%22%2C%22B%22%2C%22C%22%2C%22D%22%5D%2C%22page%22%3A1%2C%22sortBy%22%3A%22relevance%22%2C%22sortOrder%22%3A%22desc%22%2C%22onTheMarket%22%3A%5Btrue%5D%2C%22zoneIdsByTypes%22%3A%7B%22zoneIds%22%3A%5B%22-29369%22%5D%7D%7D&extensionType=extendedIfNoResult&leadingCount=2&access_token=8F%2BOcxGsKbj3pWJHCYhugO9G%2FtEYCOGq4UjWDJ3EjHM%3D%3A666c1f988a9e1d00b7d75e50&id=666c1f988a9e1d00b7d75e50
 
+test rentals :
+https://www.bienici.com/realEstateAds.json?filters={%22filterType%22:%22rent%22,%22propertyType%22:[%22flat%22],%22maxRooms%22:1,%22minArea%22:25,%22energyClassification%22:[%22A%22,%22B%22,%22C%22,%22D%22],%22onTheMarket%22:[true],%22zoneIdsByTypes%22:{%22zoneIds%22:[%22-7401%22]}}&extensionType=extendedIfNoResult
+
+
+https://www.bienici.com/realEstateAds.json?filters={"filterType":"rent","propertyType":["flat"],"maxRooms":1,"minArea":25,"energyClassification":["A","B","C","D"],"onTheMarket":[true],"zoneIdsByTypes":{"zoneIds":["-7401"]}}&extensionType=extendedIfNoResult
+
+{
+    {
+        Purchases : [
+            { Ville1 : [{},{},] },
+            { Ville2 : [{},{},] },
+            ...
+        ]
+    },
+    {
+        Rentals : [
+            { Ville1 : [{},{},] },
+            { Ville2 : [{},{},] },
+            ...
+        ]
+    },
+}
+
+
+
 // Stream = transform the list into stream
 // Filter = return a stream with only the matching elements
 // Pattern = regex with one of the two keyword, only check if exists

@@ -14,4 +14,5 @@ public class Rental {
     private Float priceTotal;
     private Float priceCharges;
     private Float priceEnergy;
+    private Boolean isFurnished;
 }
