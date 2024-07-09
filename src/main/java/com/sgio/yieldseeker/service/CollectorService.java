@@ -36,15 +36,11 @@ public class CollectorService {
         return new RestTemplate();
     }
 
-    public Map<String, Map> collectAll() {
+    public Map<String, Map<Integer, ?>> collectAll() {
         WebDriverManager.chromedriver().setup();
         final ChromeOptions chromeOptions = new ChromeOptions().addArguments("--headless=new", "--disable-gpu");
         final WebDriver driver = new ChromeDriver(chromeOptions);
         final WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-
-        final String filtersPurchase = "{\"filterType\":\"buy\",\"propertyType\":[\"flat\"],\"maxRooms\":1,\"minArea\":25,\"energyClassification\":[\"A\",\"B\",\"C\",\"D\"],\"onTheMarket\":[true],\"zoneIdsByTypes\":{\"zoneIds\":[\"-7401\"]}}";
-        final String filtersRental = "{\"filterType\":\"rent\",\"propertyType\":[\"flat\"],\"maxRooms\":1,\"minArea\":25,\"energyClassification\":[\"A\",\"B\",\"C\",\"D\"],\"onTheMarket\":[true],\"zoneIdsByTypes\":{\"zoneIds\":[\"-7401\"]}}";
-
 
         List<Purchase> collectedPurchases = collect(Purchase.class, driver, wait);
         List<Rental> collectedRentals = collect(Rental.class, driver, wait);
@@ -52,7 +48,7 @@ public class CollectorService {
         Map<Integer, List<Purchase>> sortedByCityPurchases = sortByCity(Purchase.class, collectedPurchases);
         Map<Integer, List<Rental>> sortedByCityRentals = sortByCity(Rental.class, collectedRentals);
 
-        Map<String, Map> mapAll = new HashMap<>();
+        Map<String, Map<Integer, ?>> mapAll = new HashMap<>();
         mapAll.put("Purchases", sortedByCityPurchases);
         mapAll.put("Rentals",sortedByCityRentals);
 

@@ -18,9 +18,9 @@ public class YieldController {
     @Autowired
     CalculatorService calculatorService;
 
-    @RequestMapping("/scrapUrl")
-    public Map<String, Map> getYieldUrl(){
-        return yieldService.yieldUrl();
+    @RequestMapping("/yield")
+    public Map<String, Map> getYield(){
+        return yieldService.yield();
     }
 
 
