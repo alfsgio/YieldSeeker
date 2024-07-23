@@ -65,10 +65,18 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- HTTP CLIENT-->
         <dependency>
             <groupId>org.apache.httpcomponents.client5</groupId>
             <artifactId>httpclient5</artifactId>
             <version>5.2.1</version>
+        </dependency>
+
+        <!-- OPEN CSV-->
+        <dependency>
+            <groupId>com.opencsv</groupId>
+            <artifactId>opencsv</artifactId>
+            <version>5.9</version>
         </dependency>
 
     </dependencies>

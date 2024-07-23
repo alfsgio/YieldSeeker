@@ -38,7 +38,7 @@ public class CollectorService {
         return new RestTemplate();
     }
 
-    public Map<String, Map<Integer, ?>> collectAll() {
+    public Map<String, Map<Integer, List<?>>> collectAll() {
         WebDriverManager.chromedriver().setup();
 
         final ChromeOptions chromeOptions = new ChromeOptions().addArguments("--headless=new", "--disable-gpu");
@@ -52,19 +52,18 @@ public class CollectorService {
             Map<Integer, List<Purchase>> sortedByCityPurchases = sortByCity(Purchase.class, collectedPurchases);
             Map<Integer, List<Rental>> sortedByCityRentals = sortByCity(Rental.class, collectedRentals);
 
-            Map<String, Map<Integer, ?>> mapAll = new HashMap<>();
-            mapAll.put("Purchases", sortedByCityPurchases);
-            mapAll.put("Rentals",sortedByCityRentals);
+            Map<String, Map<Integer, List<?>>> mapAll = new HashMap<>();
+            mapAll.put("Purchases", new HashMap<>(sortedByCityPurchases));
+            mapAll.put("Rentals", new HashMap<>(sortedByCityRentals));
 
             return mapAll;
         } finally {
             driver.quit(); // Always close web browser
         }
-
     }
 
     private <T> Map<Integer, List<T>> sortByCity(Class<T> clazz, List<T> listToSort){
-        Map<Integer, List<T>> sortedMap = new HashMap<>();
+        final Map<Integer, List<T>> sortedMap = new HashMap<>();
 
         listToSort.forEach(item -> {
             try {
@@ -81,12 +80,14 @@ public class CollectorService {
     }
 
     private <T> List<T> collect(Class<T> clazz, WebDriver driver, WebDriverWait wait){
+        // TO EXTRACT
         String filters = "";
         if(clazz == Purchase.class){
             filters = "{\"filterType\":\"buy\",\"propertyType\":[\"flat\"],\"maxRooms\":1,\"minArea\":25,\"energyClassification\":[\"A\",\"B\",\"C\",\"D\"],\"onTheMarket\":[true],\"zoneIdsByTypes\":{\"zoneIds\":[\"-7401\"]}}";
         } else if(clazz == Rental.class){
             filters = "{\"filterType\":\"rent\",\"propertyType\":[\"flat\"],\"maxRooms\":1,\"minArea\":25,\"energyClassification\":[\"A\",\"B\",\"C\",\"D\"],\"onTheMarket\":[true],\"zoneIdsByTypes\":{\"zoneIds\":[\"-7401\"]}}";
         }
+        // TO EXTRACT
 
         final String encodedUrl = "https://www.bienici.com/realEstateAds.json?filters=" + URLEncoder.encode(filters, StandardCharsets.UTF_8) + "&extensionType=extendedIfNoResult";
         String jsonText = "";

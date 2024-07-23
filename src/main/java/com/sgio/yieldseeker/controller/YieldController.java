@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -19,14 +20,13 @@ public class YieldController {
     CalculatorService calculatorService;
 
     @RequestMapping("/yield")
-    public Map<String, Map> getYield(){
-        return yieldService.yield();
-    }
+    public Map<String, Map<Integer, List<?>>> getYield(){ return yieldService.yield(); }
 
+    @RequestMapping("/testcsv")
+    public Float testCsvLoader(){ return yieldService.testCsvLoader(); }
 
     @RequestMapping("/monthly/{amount}")
-    public Double getMonthly(@PathVariable Integer amount){
-        return calculatorService.calculateMonthly(amount);
+    public Float getMonthly(@PathVariable Integer amount){
+        return calculatorService.calculateLoan(amount);
     }
-
 }

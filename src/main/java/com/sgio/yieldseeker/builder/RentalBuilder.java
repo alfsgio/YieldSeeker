@@ -11,11 +11,27 @@ public class RentalBuilder {
     private Boolean isFurnished;
 
     public RentalBuilder from(JsonObject jsonDatas) {
-        this.apartment = new ApartmentBuilder().from(jsonDatas).build();
-        this.priceTotal = jsonDatas.get("price").getAsFloat();
-        this.priceCharges = jsonDatas.has("charges") ? jsonDatas.get("charges").getAsFloat() : 0;
-        this.isFurnished = jsonDatas.has("isFurnished") && jsonDatas.get("isFurnished").getAsBoolean();
+        this.apartment = parseApartment(jsonDatas);
+        this.priceTotal = parsePriceTotal(jsonDatas);
+        this.priceCharges = parsePriceCharges(jsonDatas);
+        this.isFurnished = parseIsFurnished(jsonDatas);
         return this;
+    }
+
+    private Apartment parseApartment(JsonObject jsonDatas) {
+        return new ApartmentBuilder().from(jsonDatas).build();
+    }
+
+    private Float parsePriceTotal(JsonObject jsonDatas) {
+        return jsonDatas.get("price").getAsFloat();
+    }
+
+    private Float parsePriceCharges(JsonObject jsonDatas) {
+        return jsonDatas.has("charges") ? jsonDatas.get("charges").getAsFloat() : 0;
+    }
+
+    private Boolean parseIsFurnished(JsonObject jsonDatas) {
+        return jsonDatas.has("isFurnished") && jsonDatas.get("isFurnished").getAsBoolean();
     }
 
     public Rental build() {
