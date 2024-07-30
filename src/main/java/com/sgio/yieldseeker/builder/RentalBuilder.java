@@ -3,7 +3,9 @@ package com.sgio.yieldseeker.builder;
 import com.google.gson.JsonObject;
 import com.sgio.yieldseeker.model.Apartment;
 import com.sgio.yieldseeker.model.Rental;
+import org.springframework.stereotype.Component;
 
+@Component
 public class RentalBuilder {
     private Apartment apartment;
     private Float priceTotal;
@@ -23,15 +25,17 @@ public class RentalBuilder {
     }
 
     private Float parsePriceTotal(JsonObject jsonDatas) {
-        return jsonDatas.get("price").getAsFloat();
+        return jsonDatas.has("price") ? jsonDatas.get("price").getAsFloat() : -1f;
     }
 
     private Float parsePriceCharges(JsonObject jsonDatas) {
-        return jsonDatas.has("charges") ? jsonDatas.get("charges").getAsFloat() : 0;
+        return jsonDatas.has("charges") ? jsonDatas.get("charges").getAsFloat() : 0f;
     }
 
     private Boolean parseIsFurnished(JsonObject jsonDatas) {
-        return jsonDatas.has("isFurnished") && jsonDatas.get("isFurnished").getAsBoolean();
+        final Boolean isFurnished = jsonDatas.has("isFurnished") && jsonDatas.get("isFurnished").getAsBoolean();
+        this.apartment.addToScore(isFurnished ? 1f : 0f);
+        return isFurnished;
     }
 
     public Rental build() {

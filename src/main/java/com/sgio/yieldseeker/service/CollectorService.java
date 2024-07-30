@@ -1,12 +1,10 @@
 package com.sgio.yieldseeker.service;
 
-import com.google.gson.*;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 import com.sgio.yieldseeker.builder.PurchaseBuilder;
 import com.sgio.yieldseeker.builder.RentalBuilder;
-import com.sgio.yieldseeker.enumerations.Convenience;
-import com.sgio.yieldseeker.enumerations.DPE;
-import com.sgio.yieldseeker.enumerations.ExtraSpace;
-import com.sgio.yieldseeker.enumerations.Heating;
 import com.sgio.yieldseeker.model.Apartment;
 import com.sgio.yieldseeker.model.Purchase;
 import com.sgio.yieldseeker.model.Rental;
@@ -17,6 +15,7 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -37,6 +36,12 @@ public class CollectorService {
     public RestTemplate restTemplate() {
         return new RestTemplate();
     }
+
+    @Autowired
+    PurchaseBuilder purchaseBuilder;
+
+    @Autowired
+    RentalBuilder rentalBuilder;
 
     public Map<String, Map<Integer, List<?>>> collectAll() {
         WebDriverManager.chromedriver().setup();
@@ -70,7 +75,11 @@ public class CollectorService {
                 final Method getApartmentMethod = clazz.getMethod("getApartment");
                 final Apartment apartment = (Apartment)getApartmentMethod.invoke(item);
                 final Integer postalCode = apartment.getPostalCode();
-                sortedMap.computeIfAbsent(postalCode, k -> new ArrayList<>()).add(item);
+
+                if(!sortedMap.containsKey(postalCode)){
+                    sortedMap.put(postalCode, new ArrayList<>());
+                }
+                sortedMap.get(postalCode).add(item);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -83,9 +92,9 @@ public class CollectorService {
         // TO EXTRACT
         String filters = "";
         if(clazz == Purchase.class){
-            filters = "{\"filterType\":\"buy\",\"propertyType\":[\"flat\"],\"maxRooms\":1,\"minArea\":25,\"energyClassification\":[\"A\",\"B\",\"C\",\"D\"],\"onTheMarket\":[true],\"zoneIdsByTypes\":{\"zoneIds\":[\"-7401\"]}}";
+            filters = "{\"size\":500,\"filterType\":\"buy\",\"propertyType\":[\"flat\"],\"maxRooms\":1,\"minArea\":20,\"maxArea\":50,\"energyClassification\":[\"A\",\"B\",\"C\",\"D\"],\"onTheMarket\":[true],\"zoneIdsByTypes\":{\"zoneIds\":[\"-7401\"]}}";
         } else if(clazz == Rental.class){
-            filters = "{\"filterType\":\"rent\",\"propertyType\":[\"flat\"],\"maxRooms\":1,\"minArea\":25,\"energyClassification\":[\"A\",\"B\",\"C\",\"D\"],\"onTheMarket\":[true],\"zoneIdsByTypes\":{\"zoneIds\":[\"-7401\"]}}";
+            filters = "{\"size\":500,\"filterType\":\"rent\",\"propertyType\":[\"flat\"],\"maxRooms\":1,\"minArea\":20,\"maxArea\":50,\"energyClassification\":[\"A\",\"B\",\"C\",\"D\"],\"onTheMarket\":[true],\"zoneIdsByTypes\":{\"zoneIds\":[\"-7401\"]}}";
         }
         // TO EXTRACT
 
@@ -115,9 +124,9 @@ public class CollectorService {
         if(jsonCollected!= null){
             jsonCollected.forEach(jsonElement -> {
                 if(clazz == Purchase.class){
-                    collected.add(clazz.cast(new PurchaseBuilder().from(jsonElement.getAsJsonObject()).build()));
+                    collected.add(clazz.cast(purchaseBuilder.from(jsonElement.getAsJsonObject()).build()));
                 } else if(clazz == Rental.class){
-                    collected.add(clazz.cast(new RentalBuilder().from(jsonElement.getAsJsonObject()).build()));
+                    collected.add(clazz.cast(rentalBuilder.from(jsonElement.getAsJsonObject()).build()));
                 }
             });
         }

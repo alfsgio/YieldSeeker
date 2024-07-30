@@ -1,5 +1,6 @@
 package com.sgio.yieldseeker.controller;
 
+import com.sgio.yieldseeker.model.PurchaseStats;
 import com.sgio.yieldseeker.service.CalculatorService;
 import com.sgio.yieldseeker.service.YieldService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,14 +20,14 @@ public class YieldController {
     @Autowired
     CalculatorService calculatorService;
 
-    @RequestMapping("/yield")
-    public Map<String, Map<Integer, List<?>>> getYield(){ return yieldService.yield(); }
+    @RequestMapping("/getYield")
+    public Map<Integer, List<PurchaseStats>> getYield(){ return yieldService.getYield(); }
 
-    @RequestMapping("/testcsv")
-    public Float testCsvLoader(){ return yieldService.testCsvLoader(); }
+//    @RequestMapping("/testcsv")
+//    public Float testCsvLoader(){ return yieldService.testCsvLoader(); }
 
     @RequestMapping("/monthly/{amount}")
-    public Float getMonthly(@PathVariable Integer amount){
-        return calculatorService.calculateLoan(amount);
+    public Float getMonthly(@PathVariable Float amount){
+        return calculatorService.calculateLoanMonthly(amount);
     }
 }

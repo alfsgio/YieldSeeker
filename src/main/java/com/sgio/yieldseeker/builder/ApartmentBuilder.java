@@ -6,10 +6,12 @@ import com.sgio.yieldseeker.enumerations.DPE;
 import com.sgio.yieldseeker.enumerations.ExtraSpace;
 import com.sgio.yieldseeker.enumerations.Heating;
 import com.sgio.yieldseeker.model.Apartment;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Component
 public class ApartmentBuilder {
     private String city;
     private Integer postalCode;
@@ -19,6 +21,7 @@ public class ApartmentBuilder {
     private Boolean parking;
     private List<ExtraSpace> extraSpaces = new ArrayList<>();
     private List<Convenience> convenience = new ArrayList<>();
+    private Float score = 0f;
 
     public ApartmentBuilder from(JsonObject jsonDatas) {
         this.city = parseCity(jsonDatas);
@@ -45,7 +48,9 @@ public class ApartmentBuilder {
     }
 
     private DPE parseDPE(JsonObject jsonDatas) {
-        return DPE.valueOf(jsonDatas.get("energyClassification").getAsString());
+        final String stringDPE = jsonDatas.get("energyClassification").getAsString();
+        score += "A".equalsIgnoreCase(stringDPE) ? 1f : "B".equalsIgnoreCase(stringDPE) ? 0.5f : 0f;
+        return DPE.valueOf(stringDPE);
     }
 
     private Heating parseHeating(JsonObject jsonDatas) {
@@ -54,8 +59,10 @@ public class ApartmentBuilder {
     }
 
     private Boolean parseParking(JsonObject jsonDatas) {
-        return (jsonDatas.has("parkingPlacesQuantity") && jsonDatas.get("parkingPlacesQuantity").getAsInt() > 0)
-                || (jsonDatas.has("enclosedParkingQuantity") && jsonDatas.get("enclosedParkingQuantity").getAsInt() > 0);
+        final Boolean hasParking = jsonDatas.has("parkingPlacesQuantity") && jsonDatas.get("parkingPlacesQuantity").getAsInt() > 0;
+        final Boolean hasEnclosedParking = jsonDatas.has("enclosedParkingQuantity") && jsonDatas.get("enclosedParkingQuantity").getAsInt() > 0;
+        score += hasEnclosedParking ? 1f : hasParking ? 0.5f : 0f;
+        return hasParking || hasEnclosedParking;
     }
 
     private List<ExtraSpace> parseExtraSpaces(JsonObject jsonDatas) {
@@ -63,14 +70,17 @@ public class ApartmentBuilder {
         if ((jsonDatas.has("hasBalcony") && jsonDatas.get("hasBalcony").getAsBoolean())
                 || (jsonDatas.has("balconyQuantity") && jsonDatas.get("balconyQuantity").getAsInt() > 0)) {
             extraSpaces.add(ExtraSpace.valueOf("balcon"));
+            score += 1f;
         }
         if ((jsonDatas.has("hasTerrace") && jsonDatas.get("hasTerrace").getAsBoolean())
                 || (jsonDatas.has("terracesQuantity") && jsonDatas.get("terracesQuantity").getAsInt() > 0)) {
             extraSpaces.add(ExtraSpace.valueOf("terrasse"));
+            score += 1f;
         }
         if ((jsonDatas.has("hasCellar") && jsonDatas.get("hasCellar").getAsBoolean())
                 || (jsonDatas.has("cellarsOrUndergroundsQuantity") && jsonDatas.get("cellarsOrUndergroundsQuantity").getAsInt() > 0)) {
             extraSpaces.add(ExtraSpace.valueOf("cave"));
+            score += 0.5f;
         }
         return extraSpaces;
     }
@@ -79,12 +89,15 @@ public class ApartmentBuilder {
         List<Convenience> convenience = new ArrayList<>();
         if (jsonDatas.has("hasElevator") && jsonDatas.get("hasElevator").getAsBoolean()) {
             convenience.add(Convenience.valueOf("ascenseur"));
+            score += 0.5f;
         }
         if (jsonDatas.has("hasIntercom") && jsonDatas.get("hasIntercom").getAsBoolean()) {
             convenience.add(Convenience.valueOf("interphone"));
+            score += 0.5f;
         }
         if (jsonDatas.has("hasDoorCode") && jsonDatas.get("hasDoorCode").getAsBoolean()) {
             convenience.add(Convenience.valueOf("digicode"));
+            score += 0.5f;
         }
         return convenience;
     }
@@ -99,6 +112,7 @@ public class ApartmentBuilder {
                 .parking(parking)
                 .extraSpaces(extraSpaces)
                 .convenience(convenience)
+                .score(score)
                 .build();
     }
 }

@@ -1,7 +1,6 @@
 package com.sgio.yieldseeker.model;
 
 import lombok.*;
-import lombok.experimental.SuperBuilder;
 
 @Getter
 @Setter
@@ -18,8 +17,11 @@ public class Purchase {
     private Boolean procedureInProgress;
 
     // Calculated
-    private Float priceNotary;
+    private Float monthlyLoan;
     private Float propertyTax;
-    private Float credit;
-    private Float management;
+    private Float managementTax;
+
+    public Float getMonthlyCost(){
+        return this.monthlyLoan + this.propertyTax + this.managementTax;
+    }
 }

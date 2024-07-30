@@ -24,6 +24,7 @@ public class Apartment {
     private Boolean parking;
     private List<ExtraSpace> extraSpaces;
     private List<Convenience> convenience;
+    private Float score;
 
     public Apartment() {
         this.extraSpaces = new ArrayList<>();
@@ -37,4 +38,6 @@ public class Apartment {
     public void addExtraSpaces(ExtraSpace extraSpaces) {
         this.extraSpaces.add(extraSpaces);
     }
+
+    public void addToScore(Float scoreToAdd){ this.score += scoreToAdd; }
 }
