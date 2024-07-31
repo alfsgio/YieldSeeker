@@ -4,6 +4,8 @@ import com.sgio.yieldseeker.model.CityStats;
 import com.sgio.yieldseeker.model.Purchase;
 import com.sgio.yieldseeker.model.PurchaseStats;
 import com.sgio.yieldseeker.model.Rental;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,14 +15,18 @@ import java.util.stream.Collectors;
 @Service
 public class YieldService {
 
+    private static final Logger logger = LoggerFactory.getLogger(YieldService.class);
+
     @Autowired
-    CollectorService collectorService;
+    private CollectorService collectorService;
 
     public Map<Integer, List<PurchaseStats>> getYield(){
+        logger.info("Collect : start");
         final Map<String, Map<Integer, List<?>>> allRealEstateAds = collectorService.collectAll();
+        logger.info("Collect : end");
 
+        logger.info("Yield : start");
         final Map<Integer, List<PurchaseStats>> yieldPurchases = new HashMap<>();
-
         if(allRealEstateAds.get("Rentals") != null && allRealEstateAds.get("Purchases") != null){
             allRealEstateAds.get("Purchases").forEach( (cityCode, appList) -> {
                 final Map<Integer, CityStats> cityStatsMap = getRentalsStats(allRealEstateAds.get("Rentals"));
@@ -28,6 +34,7 @@ public class YieldService {
                 yieldPurchases.put(cityCode, getPurchasesStatsByCity(cityStats, appList));
             });
         }
+        logger.info("Yield : end");
 
         return yieldPurchases;
     }

@@ -8,22 +8,16 @@ import com.sgio.yieldseeker.builder.RentalBuilder;
 import com.sgio.yieldseeker.model.Apartment;
 import com.sgio.yieldseeker.model.Purchase;
 import com.sgio.yieldseeker.model.Rental;
-import io.github.bonigarcia.wdm.WebDriverManager;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.lang.reflect.Method;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,39 +26,32 @@ import java.util.Map;
 @Service
 public class CollectorService {
 
-    @Bean
-    public RestTemplate restTemplate() {
-        return new RestTemplate();
-    }
+    private static final Logger logger = LoggerFactory.getLogger(YieldService.class);
 
     @Autowired
-    PurchaseBuilder purchaseBuilder;
+    private WebDriver webDriver;
 
     @Autowired
-    RentalBuilder rentalBuilder;
+    private WebDriverWait webDriverWait;
+
+    @Autowired
+    private PurchaseBuilder purchaseBuilder;
+
+    @Autowired
+    private RentalBuilder rentalBuilder;
 
     public Map<String, Map<Integer, List<?>>> collectAll() {
-        WebDriverManager.chromedriver().setup();
+        List<Purchase> collectedPurchases = collect(Purchase.class, webDriver, webDriverWait);
+        List<Rental> collectedRentals = collect(Rental.class, webDriver, webDriverWait);
 
-        final ChromeOptions chromeOptions = new ChromeOptions().addArguments("--headless=new", "--disable-gpu");
-        final WebDriver driver = new ChromeDriver(chromeOptions);
-        final WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        Map<Integer, List<Purchase>> sortedByCityPurchases = sortByCity(Purchase.class, collectedPurchases);
+        Map<Integer, List<Rental>> sortedByCityRentals = sortByCity(Rental.class, collectedRentals);
 
-        try {
-            List<Purchase> collectedPurchases = collect(Purchase.class, driver, wait);
-            List<Rental> collectedRentals = collect(Rental.class, driver, wait);
+        Map<String, Map<Integer, List<?>>> mapAll = new HashMap<>();
+        mapAll.put("Purchases", new HashMap<>(sortedByCityPurchases));
+        mapAll.put("Rentals", new HashMap<>(sortedByCityRentals));
 
-            Map<Integer, List<Purchase>> sortedByCityPurchases = sortByCity(Purchase.class, collectedPurchases);
-            Map<Integer, List<Rental>> sortedByCityRentals = sortByCity(Rental.class, collectedRentals);
-
-            Map<String, Map<Integer, List<?>>> mapAll = new HashMap<>();
-            mapAll.put("Purchases", new HashMap<>(sortedByCityPurchases));
-            mapAll.put("Rentals", new HashMap<>(sortedByCityRentals));
-
-            return mapAll;
-        } finally {
-            driver.quit(); // Always close web browser
-        }
+        return mapAll;
     }
 
     private <T> Map<Integer, List<T>> sortByCity(Class<T> clazz, List<T> listToSort){
@@ -81,7 +68,7 @@ public class CollectorService {
                 }
                 sortedMap.get(postalCode).add(item);
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.error("Error when tyring to sort by city", e);
             }
         });
 
@@ -89,23 +76,21 @@ public class CollectorService {
     }
 
     private <T> List<T> collect(Class<T> clazz, WebDriver driver, WebDriverWait wait){
-        // TO EXTRACT
-        String filters = "";
+        final String url = "https://www.bienici.com/realEstateAds.json?filters=%7B%22size%22%3A500%2C%22filterType%22%3A%22$$$%22%2C%22propertyType%22%3A%5B%22flat%22%5D%2C%22maxRooms%22%3A1%2C%22minArea%22%3A20%2C%22maxArea%22%3A50%2C%22energyClassification%22%3A%5B%22A%22%2C%22B%22%2C%22C%22%2C%22D%22%5D%2C%22onTheMarket%22%3A%5Btrue%5D%2C%22zoneIdsByTypes%22%3A%7B%22zoneIds%22%3A%5B%22-7401%22%2C%22-7458%22%2C%22-7444%22%2C%22-7449%22%2C%22-7383%22%5D%7D%7D&extensionType=extendedIfNoResult";
+
+        String finalUrl = "";
         if(clazz == Purchase.class){
-            filters = "{\"size\":500,\"filterType\":\"buy\",\"propertyType\":[\"flat\"],\"maxRooms\":1,\"minArea\":20,\"maxArea\":50,\"energyClassification\":[\"A\",\"B\",\"C\",\"D\"],\"onTheMarket\":[true],\"zoneIdsByTypes\":{\"zoneIds\":[\"-7401\"]}}";
+            finalUrl = url.replace("$$$", "buy");
         } else if(clazz == Rental.class){
-            filters = "{\"size\":500,\"filterType\":\"rent\",\"propertyType\":[\"flat\"],\"maxRooms\":1,\"minArea\":20,\"maxArea\":50,\"energyClassification\":[\"A\",\"B\",\"C\",\"D\"],\"onTheMarket\":[true],\"zoneIdsByTypes\":{\"zoneIds\":[\"-7401\"]}}";
+            finalUrl = url.replace("$$$", "rent");
         }
-        // TO EXTRACT
 
-        final String encodedUrl = "https://www.bienici.com/realEstateAds.json?filters=" + URLEncoder.encode(filters, StandardCharsets.UTF_8) + "&extensionType=extendedIfNoResult";
         String jsonText = "";
-
         try {
-            driver.get(encodedUrl);
+            driver.get(finalUrl);
             jsonText = wait.until(ExpectedConditions.presenceOfElementLocated(By.tagName("pre"))).getText();
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error when trying to get data from url", e);
         }
 
         JsonArray jsonCollected = null;
@@ -115,7 +100,7 @@ public class CollectorService {
                         .getAsJsonObject()
                         .get("realEstateAds").getAsJsonArray();
             } catch (JsonSyntaxException e) {
-                e.printStackTrace();
+                logger.error("Error when trying to parse "+clazz.getName()+" list", e);
             }
         }
 
@@ -134,4 +119,3 @@ public class CollectorService {
         return collected;
     }
 }
-

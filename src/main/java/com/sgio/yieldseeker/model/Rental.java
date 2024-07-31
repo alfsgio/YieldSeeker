@@ -1,7 +1,6 @@
 package com.sgio.yieldseeker.model;
 
 import lombok.*;
-import lombok.experimental.SuperBuilder;
 
 @Getter
 @Setter
@@ -9,7 +8,6 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Rental {
-    private String rentalAdLink;
     private Apartment apartment;
     private Float priceTotal;
     private Float priceCharges;

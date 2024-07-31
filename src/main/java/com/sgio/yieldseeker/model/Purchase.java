@@ -8,7 +8,6 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Purchase {
-    private String purchaseAdLink;
     private Apartment apartment;
     private Float price;
     private Float agencyFeePercentage;

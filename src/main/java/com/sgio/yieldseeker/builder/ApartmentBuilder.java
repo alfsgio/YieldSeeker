@@ -36,7 +36,7 @@ public class ApartmentBuilder {
     }
 
     private String parseCity(JsonObject jsonDatas) {
-        return jsonDatas.get("city").getAsString();
+        return jsonDatas.get("city") != null ? jsonDatas.get("city").getAsString() : "";
     }
 
     private Integer parsePostalCode(JsonObject jsonDatas) {
