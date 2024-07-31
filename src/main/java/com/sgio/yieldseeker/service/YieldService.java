@@ -16,9 +16,6 @@ public class YieldService {
     @Autowired
     CollectorService collectorService;
 
-    @Autowired
-    CalculatorService calculatorService;
-
     public Map<Integer, List<PurchaseStats>> getYield(){
         final Map<String, Map<Integer, List<?>>> allRealEstateAds = collectorService.collectAll();
 

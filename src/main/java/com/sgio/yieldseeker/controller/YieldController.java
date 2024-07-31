@@ -23,9 +23,6 @@ public class YieldController {
     @RequestMapping("/getYield")
     public Map<Integer, List<PurchaseStats>> getYield(){ return yieldService.getYield(); }
 
-//    @RequestMapping("/testcsv")
-//    public Float testCsvLoader(){ return yieldService.testCsvLoader(); }
-
     @RequestMapping("/monthly/{amount}")
     public Float getMonthly(@PathVariable Float amount){
         return calculatorService.calculateLoanMonthly(amount);
