@@ -8,8 +8,11 @@ import com.sgio.yieldseeker.builder.RentalBuilder;
 import com.sgio.yieldseeker.model.Apartment;
 import com.sgio.yieldseeker.model.Purchase;
 import com.sgio.yieldseeker.model.Rental;
+import io.github.bonigarcia.wdm.WebDriverManager;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
@@ -18,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Method;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -26,13 +30,7 @@ import java.util.Map;
 @Service
 public class CollectorService {
 
-    private static final Logger logger = LoggerFactory.getLogger(YieldService.class);
-
-    @Autowired
-    private WebDriver webDriver;
-
-    @Autowired
-    private WebDriverWait webDriverWait;
+    private static final Logger logger = LoggerFactory.getLogger(CollectorService.class);
 
     @Autowired
     private PurchaseBuilder purchaseBuilder;
@@ -41,17 +39,26 @@ public class CollectorService {
     private RentalBuilder rentalBuilder;
 
     public Map<String, Map<Integer, List<?>>> collectAll() {
-        List<Purchase> collectedPurchases = collect(Purchase.class, webDriver, webDriverWait);
-        List<Rental> collectedRentals = collect(Rental.class, webDriver, webDriverWait);
+        WebDriverManager.chromedriver().setup();
+        final ChromeOptions chromeOptions = new ChromeOptions().addArguments("--headless=new", "--disable-gpu");
+        final WebDriver driver = new ChromeDriver(chromeOptions);
+        final WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
 
-        Map<Integer, List<Purchase>> sortedByCityPurchases = sortByCity(Purchase.class, collectedPurchases);
-        Map<Integer, List<Rental>> sortedByCityRentals = sortByCity(Rental.class, collectedRentals);
+        try {
+            List<Purchase> collectedPurchases = collect(Purchase.class, driver, wait);
+            List<Rental> collectedRentals = collect(Rental.class, driver, wait);
 
-        Map<String, Map<Integer, List<?>>> mapAll = new HashMap<>();
-        mapAll.put("Purchases", new HashMap<>(sortedByCityPurchases));
-        mapAll.put("Rentals", new HashMap<>(sortedByCityRentals));
+            Map<Integer, List<Purchase>> sortedByCityPurchases = sortByCity(Purchase.class, collectedPurchases);
+            Map<Integer, List<Rental>> sortedByCityRentals = sortByCity(Rental.class, collectedRentals);
 
-        return mapAll;
+            Map<String, Map<Integer, List<?>>> mapAll = new HashMap<>();
+            mapAll.put("Purchases", new HashMap<>(sortedByCityPurchases));
+            mapAll.put("Rentals", new HashMap<>(sortedByCityRentals));
+
+            return mapAll;
+        } finally {
+            driver.quit(); // Always close web browser
+        }
     }
 
     private <T> Map<Integer, List<T>> sortByCity(Class<T> clazz, List<T> listToSort){
