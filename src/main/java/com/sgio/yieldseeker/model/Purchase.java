@@ -21,6 +21,6 @@ public class Purchase {
     private Float managementTax;
 
     public Float getMonthlyCost(){
-        return this.monthlyLoan + this.propertyTax + this.managementTax;
+        return this.monthlyLoan + this.propertyTax + this.managementTax + (annualCondominiumFees/12);
     }
 }
