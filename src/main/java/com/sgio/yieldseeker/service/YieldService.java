@@ -72,4 +72,14 @@ public class YieldService {
                 });
         return purchaseStatsList;
     }
+
+    public List<Rental> getRentalsFromCityCode(Integer cityCode) {
+        logger.info("Collect : start");
+        final Map<String, Map<Integer, List<?>>> allRealEstateAds = collectorService.collectAll();
+        logger.info("Collect : end");
+
+        return allRealEstateAds.get("Rentals").get(cityCode)
+                .stream().map(rental -> (Rental) rental)
+                .toList();
+    }
 }

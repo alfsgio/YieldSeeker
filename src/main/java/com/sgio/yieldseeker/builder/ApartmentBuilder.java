@@ -1,5 +1,6 @@
 package com.sgio.yieldseeker.builder;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.sgio.yieldseeker.enumerations.Convenience;
 import com.sgio.yieldseeker.enumerations.DPE;
@@ -20,7 +21,8 @@ public class ApartmentBuilder {
     private Heating heating;
     private Boolean parking;
     private List<ExtraSpace> extraSpaces = new ArrayList<>();
-    private List<Convenience> convenience = new ArrayList<>();
+    private List<Convenience> conveniences = new ArrayList<>();
+    private List<String> photoLinks = new ArrayList<>();
     private Float score = 0f;
 
     public ApartmentBuilder from(JsonObject jsonDatas) {
@@ -31,7 +33,8 @@ public class ApartmentBuilder {
         this.heating = parseHeating(jsonDatas);
         this.parking = parseParking(jsonDatas);
         this.extraSpaces = parseExtraSpaces(jsonDatas);
-        this.convenience = parseConvenience(jsonDatas);
+        this.conveniences = parseConvenience(jsonDatas);
+        this.photoLinks = parsePhotoLinks(jsonDatas);
         return this;
     }
 
@@ -86,20 +89,32 @@ public class ApartmentBuilder {
     }
 
     private List<Convenience> parseConvenience(JsonObject jsonDatas) {
-        List<Convenience> convenience = new ArrayList<>();
+        List<Convenience> conveniences = new ArrayList<>();
         if (jsonDatas.has("hasElevator") && jsonDatas.get("hasElevator").getAsBoolean()) {
-            convenience.add(Convenience.valueOf("ascenseur"));
+            conveniences.add(Convenience.valueOf("ascenseur"));
             score += 0.5f;
         }
         if (jsonDatas.has("hasIntercom") && jsonDatas.get("hasIntercom").getAsBoolean()) {
-            convenience.add(Convenience.valueOf("interphone"));
+            conveniences.add(Convenience.valueOf("interphone"));
             score += 0.5f;
         }
         if (jsonDatas.has("hasDoorCode") && jsonDatas.get("hasDoorCode").getAsBoolean()) {
-            convenience.add(Convenience.valueOf("digicode"));
+            conveniences.add(Convenience.valueOf("digicode"));
             score += 0.5f;
         }
-        return convenience;
+        return conveniences;
+    }
+
+    private List<String> parsePhotoLinks(JsonObject jsonDatas) {
+        List<String> photoLinks = new ArrayList<>();
+        if (jsonDatas.has("photos") && jsonDatas.get("photos").isJsonArray()) {
+            final JsonArray jsonArray = jsonDatas.getAsJsonArray("photos");
+            jsonArray.forEach( element -> {
+                final JsonObject elementData = element.getAsJsonObject();
+                photoLinks.add(elementData.get("url") != null ? elementData.get("url").getAsString() : "");
+            });
+        }
+        return photoLinks;
     }
 
     public Apartment build() {
@@ -111,7 +126,8 @@ public class ApartmentBuilder {
                 .heating(heating)
                 .parking(parking)
                 .extraSpaces(extraSpaces)
-                .convenience(convenience)
+                .conveniences(conveniences)
+                .photoLinks(photoLinks)
                 .score(score)
                 .build();
     }

@@ -23,21 +23,25 @@ public class Apartment {
     private Heating heating;
     private Boolean parking;
     private List<ExtraSpace> extraSpaces;
-    private List<Convenience> convenience;
+    private List<Convenience> conveniences;
+    private List<String> photoLinks;
     private Float score;
 
     public Apartment() {
         this.extraSpaces = new ArrayList<>();
-        this.convenience = new ArrayList<>();
+        this.conveniences = new ArrayList<>();
+        this.photoLinks = new ArrayList<>();
     }
 
     public void addConvenience(Convenience convenience) {
-        this.convenience.add(convenience);
+        this.conveniences.add(convenience);
     }
 
-    public void addExtraSpaces(ExtraSpace extraSpaces) {
+    public void addExtraSpace(ExtraSpace extraSpaces) {
         this.extraSpaces.add(extraSpaces);
     }
+
+    public void addPhotoLink(String photoLink) { this.photoLinks.add(photoLink); }
 
     public void addToScore(Float scoreToAdd){ this.score += scoreToAdd; }
 }
