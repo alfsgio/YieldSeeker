@@ -39,13 +39,9 @@ public class CollectorService {
     private RentalBuilder rentalBuilder;
 
     /**
-     * Returns an Image object that can then be painted on the screen.
-     * The url argument must specify an absolute <a href="#{@link}">{@link URL}</a>. The name
-     * argument is a specifier that is relative to the url argument.
-     * <p>
+     * Collect all the ads provided by the bienici url inside a big Map.
      *
-     * @param  url  an absolute URL giving the base location of the image
-     * @return      a map containing all
+     * @return  a map containing all the scrapped datas.
      */
     public Map<String, Map<Integer, List<?>>> collectAll() {
 
@@ -57,12 +53,15 @@ public class CollectorService {
         final WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
 
         try {
+            // Collect data for each type of real estate
             List<Purchase> collectedPurchases = collect(Purchase.class, driver, wait);
             List<Rental> collectedRentals = collect(Rental.class, driver, wait);
 
+            // Map them
             Map<Integer, List<Purchase>> sortedByCityPurchases = sortByCity(Purchase.class, collectedPurchases);
             Map<Integer, List<Rental>> sortedByCityRentals = sortByCity(Rental.class, collectedRentals);
 
+            // And build the big Map with all the datas
             Map<String, Map<Integer, List<?>>> mapAll = new HashMap<>();
             mapAll.put("Purchases", new HashMap<>(sortedByCityPurchases));
             mapAll.put("Rentals", new HashMap<>(sortedByCityRentals));
@@ -74,13 +73,11 @@ public class CollectorService {
     }
 
     /**
-     * Returns an Image object that can then be painted on the screen.
-     * The url argument must specify an absolute <a href="#{@link}">{@link URL}</a>. The name
-     * argument is a specifier that is relative to the url argument.
-     * <p>
+     * Map the list of ads by city (represented by the postal code).
      *
-     * @param  url  an absolute URL giving the base location of the image
-     * @return      a map containing all
+     * @param  clazz        the class representing the type of real estate collected
+     * @param  listToSort   the list of apartment to sort
+     * @return              the map between cities and their real estate ads
      */
     private <T> Map<Integer, List<T>> sortByCity(Class<T> clazz, List<T> listToSort){
         final Map<Integer, List<T>> sortedMap = new HashMap<>();
@@ -104,7 +101,7 @@ public class CollectorService {
     }
 
     /**
-     * Collect the data for a given type of real estate (purchase or rental).
+     * Collecting the data for a given type of real estate (purchase or rental).
      * All the other parameters is already provided in the URL.
      * An example of the bienici datas return can be find at 'resources/specific_resources/'.
      *

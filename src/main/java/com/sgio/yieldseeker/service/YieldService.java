@@ -20,6 +20,12 @@ public class YieldService {
     @Autowired
     private CollectorService collectorService;
 
+    /**
+     * The main method, call the collector service and the methods used to calculate the stats.
+     * Make a map of the final stats by city.
+     *
+     * @return  a map containing all purchase stats by city
+     */
     public Map<Integer, List<PurchaseStats>> getYield(){
         logger.info("Collect : start");
         final Map<String, Map<Integer, List<?>>> allRealEstateAds = collectorService.collectAll();
@@ -39,6 +45,12 @@ public class YieldService {
         return yieldPurchases;
     }
 
+    /**
+     * Calculating the stats of each city rental market.
+     *
+     * @param  rentalMarket     a map of the rentalMarket
+     * @return                  the city stats calculated
+     */
     private Map<Integer, CityStats> getRentalsStats(Map<Integer, List<?>> rentalMarket){
         final Map<Integer, CityStats> citiesStats = new HashMap<>();
 
@@ -60,6 +72,14 @@ public class YieldService {
         return citiesStats;
     }
 
+    /**
+     * Calculating the yield of the purchases for a given city.
+     * The data returned contains also the citystats and the purchase ads itself.
+     *
+     * @param  cityStats    the city stats
+     * @param  purchaseList the purchase list
+     * @return              the purchases stats calulated
+     */
     private List<PurchaseStats> getPurchasesStatsByCity(CityStats cityStats, List<?> purchaseList){
         final List<PurchaseStats> purchaseStatsList = new ArrayList<>();
         purchaseList.stream().map(purchase -> (Purchase) purchase).toList()
@@ -67,12 +87,22 @@ public class YieldService {
                     final Float yieldRatio = cityStats.getAvgPrice() > 0f ?
                             purchase.getMonthlyCost() / cityStats.getAvgPrice()
                             : -1f;
-                    final PurchaseStats purchaseStats = PurchaseStats.builder().purchase(purchase).yield(yieldRatio).cityStats(cityStats).build();
+                    final PurchaseStats purchaseStats = PurchaseStats.builder().purchase(purchase).yieldRatio(yieldRatio).cityStats(cityStats).build();
                     purchaseStatsList.add(purchaseStats);
                 });
         return purchaseStatsList;
     }
 
+    /**
+     * Collecting the data for a given type of real estate (purchase or rental).
+     * All the other parameters is already provided in the URL.
+     * An example of the bienici datas return can be find at 'resources/specific_resources/'.
+     *
+     * @param  clazz    the class representing the type of real estate collected
+     * @param  driver   the webdriver used to collect the datas
+     * @param  wait     the webdriver waiter
+     * @return          a list of real estate ads for the given class
+     */
     public List<Rental> getRentalsFromCityCode(Integer cityCode) {
         logger.info("Collect : start");
         final Map<String, Map<Integer, List<?>>> allRealEstateAds = collectorService.collectAll();

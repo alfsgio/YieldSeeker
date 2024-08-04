@@ -14,6 +14,9 @@ public class DataLoaderService {
 
     private List<CityData> cities = new ArrayList<>();
 
+    /**
+     * This service loads the city datas from the 'price_by_square_meter.csv' file.
+     */
     public void loadCitiesMap() {
         final InputStream resource = getClass().getClassLoader().getResourceAsStream("specific_resources/price_by_square_meter.csv");
         if (resource != null) {

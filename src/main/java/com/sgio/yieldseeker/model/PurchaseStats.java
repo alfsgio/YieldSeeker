@@ -13,6 +13,6 @@ import java.util.List;
 @AllArgsConstructor
 public class PurchaseStats {
     private Purchase purchase;
-    private Float yield;
+    private Float yieldRatio;
     private CityStats cityStats;
 }
