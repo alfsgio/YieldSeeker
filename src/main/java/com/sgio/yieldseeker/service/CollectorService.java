@@ -38,7 +38,19 @@ public class CollectorService {
     @Autowired
     private RentalBuilder rentalBuilder;
 
+    /**
+     * Returns an Image object that can then be painted on the screen.
+     * The url argument must specify an absolute <a href="#{@link}">{@link URL}</a>. The name
+     * argument is a specifier that is relative to the url argument.
+     * <p>
+     *
+     * @param  url  an absolute URL giving the base location of the image
+     * @return      a map containing all
+     */
     public Map<String, Map<Integer, List<?>>> collectAll() {
+
+        // In this app, we are forced to use Selenium to emulate web browser.
+        // We can't make direct web requests as the server reject us (robots are blocked).
         WebDriverManager.chromedriver().setup();
         final ChromeOptions chromeOptions = new ChromeOptions().addArguments("--headless=new", "--disable-gpu");
         final WebDriver driver = new ChromeDriver(chromeOptions);
@@ -61,6 +73,15 @@ public class CollectorService {
         }
     }
 
+    /**
+     * Returns an Image object that can then be painted on the screen.
+     * The url argument must specify an absolute <a href="#{@link}">{@link URL}</a>. The name
+     * argument is a specifier that is relative to the url argument.
+     * <p>
+     *
+     * @param  url  an absolute URL giving the base location of the image
+     * @return      a map containing all
+     */
     private <T> Map<Integer, List<T>> sortByCity(Class<T> clazz, List<T> listToSort){
         final Map<Integer, List<T>> sortedMap = new HashMap<>();
 
@@ -82,9 +103,20 @@ public class CollectorService {
         return sortedMap;
     }
 
+    /**
+     * Collect the data for a given type of real estate (purchase or rental).
+     * All the other parameters is already provided in the URL.
+     * An example of the bienici datas return can be find at 'resources/specific_resources/'.
+     *
+     * @param  clazz    the class representing the type of real estate collected
+     * @param  driver   the webdriver used to collect the datas
+     * @param  wait     the webdriver waiter
+     * @return          a list of real estate ads for the given class
+     */
     private <T> List<T> collect(Class<T> clazz, WebDriver driver, WebDriverWait wait){
         final String url = "https://www.bienici.com/realEstateAds.json?filters=%7B%22size%22%3A500%2C%22filterType%22%3A%22$$$%22%2C%22propertyType%22%3A%5B%22flat%22%5D%2C%22maxRooms%22%3A1%2C%22minArea%22%3A20%2C%22maxArea%22%3A50%2C%22energyClassification%22%3A%5B%22A%22%2C%22B%22%2C%22C%22%2C%22D%22%5D%2C%22onTheMarket%22%3A%5Btrue%5D%2C%22zoneIdsByTypes%22%3A%7B%22zoneIds%22%3A%5B%22-7401%22%2C%22-7458%22%2C%22-7444%22%2C%22-7449%22%2C%22-7383%22%5D%7D%7D&extensionType=extendedIfNoResult";
 
+        // Updating the URL with the type of ads we're trying to collect
         String finalUrl = "";
         if(clazz == Purchase.class){
             finalUrl = url.replace("$$$", "buy");
@@ -92,6 +124,7 @@ public class CollectorService {
             finalUrl = url.replace("$$$", "rent");
         }
 
+        // Trying to get the datas from the url
         String jsonText = "";
         try {
             driver.get(finalUrl);
@@ -100,6 +133,7 @@ public class CollectorService {
             logger.error("Error when trying to get data from url", e);
         }
 
+        // Parsing the response to get only the part we are looking for
         JsonArray jsonCollected = null;
         if(!jsonText.isBlank()){
             try {
@@ -113,6 +147,7 @@ public class CollectorService {
 
         List<T> collected = new ArrayList<>();
 
+        // Filling the returned list with the parsed data through builders
         if(jsonCollected!= null){
             jsonCollected.forEach(jsonElement -> {
                 if(clazz == Purchase.class){

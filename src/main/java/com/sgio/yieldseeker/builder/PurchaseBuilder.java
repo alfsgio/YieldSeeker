@@ -66,7 +66,7 @@ public class PurchaseBuilder {
 
     private void calculatedAttributes(){
         this.monthlyLoan = calculatorService.calculateLoanMonthly(this.price);
-        this.propertyTax = calculatorService.calculatePropertyTax(this.apartment);
+        this.propertyTax = calculatorService.calculatePropertyTaxMonthly(this.apartment);
         this.managementTax = calculatorService.calculateManagementTaxMonthly(this.monthlyLoan + this.propertyTax);
     }
 

@@ -13,6 +13,12 @@ public class CalculatorService {
     @Autowired
     private DataLoaderService dataLoaderService;
 
+    /**
+     * Calculate monthly loan.
+     *
+     * @param  amount   the base amount to calculate the loan
+     * @return          the monthly loan amount
+     */
     public Float calculateLoanMonthly(Float amount) {
         final Float amountWithNotaryTax = amount * 1.08f;
         final Float amountWithoutInput = amountWithNotaryTax - 20000f;
@@ -26,7 +32,15 @@ public class CalculatorService {
         return monthlyLoan;
     }
 
-    public Float calculatePropertyTax(Apartment apartment){
+    /**
+     * Calculate the monthly property tax of a given Apartment.
+     * To do this, it uses data provided by a file of real estate
+     * data analysis of the previous year.
+     *
+     * @param  apartment    the apartment
+     * @return              the monthly tax amount
+     */
+    public Float calculatePropertyTaxMonthly(Apartment apartment){
         // surface pondérée = surface réelle + modificateurs
         // valeur locative cadastrale = ( surface pondérée * tarif au m² )*12
         // revenu cadastral = valeur locative cadastrale/2
@@ -45,6 +59,12 @@ public class CalculatorService {
         return taxeFonciere/12f;
     }
 
+    /**
+     * Calculate the monthly management tax.
+     *
+     * @param  amount   the base amount to calculate the tax
+     * @return          the monthly tax amount
+     */
     public Float calculateManagementTaxMonthly(Float amount){
         return amount*0.1f;
     }

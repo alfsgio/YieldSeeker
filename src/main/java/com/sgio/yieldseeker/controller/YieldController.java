@@ -26,9 +26,4 @@ public class YieldController {
 
     @RequestMapping("/rentals/{citycode}")
     public List<Rental> getRentalsFromCityCode(@PathVariable Integer citycode){ return yieldService.getRentalsFromCityCode(citycode); }
-
-    @RequestMapping("/monthly/{amount}")
-    public Float getMonthly(@PathVariable Float amount){
-        return calculatorService.calculateLoanMonthly(amount);
-    }
 }
