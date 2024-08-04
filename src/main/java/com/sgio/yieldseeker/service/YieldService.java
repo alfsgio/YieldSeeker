@@ -94,14 +94,10 @@ public class YieldService {
     }
 
     /**
-     * Collecting the data for a given type of real estate (purchase or rental).
-     * All the other parameters is already provided in the URL.
-     * An example of the bienici datas return can be find at 'resources/specific_resources/'.
+     * Retrieving the rental ads for a given city (represented by postal code).
      *
-     * @param  clazz    the class representing the type of real estate collected
-     * @param  driver   the webdriver used to collect the datas
-     * @param  wait     the webdriver waiter
-     * @return          a list of real estate ads for the given class
+     * @param  cityCode the city code
+     * @return          a list of rentals
      */
     public List<Rental> getRentalsFromCityCode(Integer cityCode) {
         logger.info("Collect : start");
