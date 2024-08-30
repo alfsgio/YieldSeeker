@@ -1,4 +1,4 @@
-package org.main;
+package com.sgio.yieldseeker.controller;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -6,8 +6,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class MainController {
 
-    @RequestMapping("/text")
+    @RequestMapping("/")
     public String getText(){
-        return "text";
+        return "App is up";
     }
 }
